@@ -1,0 +1,10 @@
+<Solution>
+  <Folder Name="/IntegrationPlugins/" />
+  <Folder Name="/Services/">
+    <Project Path="Integration.BusinessLogics/Integration.BusinessLogics.csproj" />
+    <Project Path="Integration.Infrastructures/Integration.Infrastructures.csproj" />
+    <Project Path="Integration.Utilities/Integration.Utilities.csproj" />
+    <Project Path="Integration.ViewModels/Integration.ViewModels.csproj" />
+  </Folder>
+  <Project Path="Integration.WebApi/Integration.WebApi.csproj" />
+</Solution>

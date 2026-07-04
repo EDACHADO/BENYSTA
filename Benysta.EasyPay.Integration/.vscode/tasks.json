@@ -1,0 +1,13 @@
+{
+	"version": "2.0.0",
+	"tasks": [
+		{
+			"label": "build-solution",
+			"type": "shell",
+			"command": "dotnet build Benysta.EasyPay.Integration.slnx",
+			"problemMatcher": [
+				"$msCompile"
+			]
+		}
+	]
+}
