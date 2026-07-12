@@ -1,12 +1,25 @@
+using Integration.BusinessLogics;
 using Microsoft.AspNetCore.Http.HttpResults;
+using Nibbs.Nps.Integration;
+using Nibbs.Nps.Integration.Configuration;
+using Scalar.AspNetCore;
 using System.Text.Json.Serialization;
 
-var builder = WebApplication.CreateSlimBuilder(args);
+var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.ConfigureHttpJsonOptions(options =>
 {
     options.SerializerOptions.TypeInfoResolverChain.Insert(0, AppJsonSerializerContext.Default);
 });
+
+builder.Services.AddControllers();
+
+// NIBSS National Payment Stack integration (configured via the "Nps" section).
+builder.Services.Configure<NpsOptions>(builder.Configuration.GetSection(NpsOptions.SectionName));
+builder.Services.AddNpsIntegration();
+
+// Business-logic layer: MediatR commands/queries the controllers dispatch to.
+builder.Services.AddIntegrationBusinessLogics();
 
 // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
 builder.Services.AddOpenApi();
@@ -16,7 +29,17 @@ var app = builder.Build();
 if (app.Environment.IsDevelopment())
 {
     app.MapOpenApi();
+
+    // Scalar API reference UI at /scalar/v1 for documentation and endpoint testing.
+    app.MapScalarApiReference(options =>
+    {
+        options
+            .WithTitle("EasyPay Integration API")
+            .WithDefaultHttpClient(ScalarTarget.CSharp, ScalarClient.HttpClient);
+    });
 }
+
+app.MapControllers();
 
 Todo[] sampleTodos =
 [
