@@ -18,7 +18,7 @@ public class NpsInboundMessage
     /// The typed document when the message type has a model
     /// (pacs.008/002/028, acmt.023/024, pain.001/002, admi.002); otherwise null.
     /// </summary>
-    public INpsDocument? Document { get; init; }
+    public INpsDocument Document { get; init; }
 
     /// <summary>Returns the typed document, or throws when it is not of the requested type.</summary>
     public TDocument GetDocument<TDocument>() where TDocument : class, INpsDocument

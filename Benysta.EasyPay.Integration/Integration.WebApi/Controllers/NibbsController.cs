@@ -4,7 +4,7 @@ using Integration.BusinessLogics.Nps.Models;
 using Integration.BusinessLogics.Nps.Queries;
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
-using Nibbs.Nps.Integration.Messages;
+using Nibbs.Nps.Integration.RequestModels;
 
 namespace Integration.WebApi.Controllers;
 
@@ -83,6 +83,21 @@ public class NibbsController(IMediator mediator) : ControllerBase
         [FromBody] NpsPaymentStatusReportRequest request,
         CancellationToken cancellationToken)
         => this.ToActionResult(await mediator.Send(new SendPaymentStatusReportCommand(request), cancellationToken));
+
+    /// <summary>Sends a customer credit transfer initiation (pain.001) to the NIBSS Institution service.</summary>
+    /// <param name="request">The initiation details (debtor, creditor, amount, KYC supplementary data).</param>
+    /// <param name="cancellationToken">Aborts the dispatch when the client disconnects.</param>
+    /// <response code="202">The service acknowledged receipt; the outcome arrives later as a pain.002 webhook.</response>
+    /// <response code="422">The service rejected the message at validation level (admi.002).</response>
+    /// <response code="502">The service could not be reached, could not decrypt the message, or returned an unexpected error.</response>
+    [HttpPost("credit-transfer-initiation")]
+    [ProducesResponseType(typeof(NibbsDispatchResult), StatusCodes.Status202Accepted)]
+    [ProducesResponseType(typeof(NibbsRejectionResult), StatusCodes.Status422UnprocessableEntity)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status502BadGateway)]
+    public async Task<IActionResult> SendCreditTransferInitiation(
+        [FromBody] NpsCreditTransferInitiationRequest request,
+        CancellationToken cancellationToken)
+        => this.ToActionResult(await mediator.Send(new SendCreditTransferInitiationCommand(request), cancellationToken));
 
     /// <summary>Gets the list of NPS participants with their active/inactive statuses.</summary>
     /// <param name="cancellationToken">Aborts the request when the client disconnects.</param>
