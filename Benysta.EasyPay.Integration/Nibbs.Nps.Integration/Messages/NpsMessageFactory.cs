@@ -1,11 +1,12 @@
 using Microsoft.Extensions.Options;
 using Nibbs.Nps.Integration.Abstractions;
 using Nibbs.Nps.Integration.Configuration;
-using Nibbs.Nps.Integration.Constants;
 using Nibbs.Nps.Integration.Helpers;
 using Nibbs.Nps.Integration.Messages.Acmt;
 using Nibbs.Nps.Integration.Messages.Common;
 using Nibbs.Nps.Integration.Messages.Pacs;
+using Nibbs.Nps.Integration.Messages.Pain;
+using Nibbs.Nps.Integration.RequestModels;
 
 namespace Nibbs.Nps.Integration.Messages;
 
@@ -127,6 +128,73 @@ public class NpsMessageFactory(IOptions<NpsOptions> options) : INpsMessageFactor
         };
     }
 
+    public Acmt024Document CreateIdVerificationReport(NpsIdVerificationReportRequest request)
+    {
+        ArgumentNullException.ThrowIfNull(request);
+
+        var now = DateTime.UtcNow;
+        var messageId = request.MessageId ?? NpsMessageIdGenerator.NewMessageId(options.Value.SourceId, now);
+        var source = options.Value.SourceId;
+
+        return new Acmt024Document
+        {
+            VerificationReport = new IdentificationVerificationReport
+            {
+                Assignment = new IdentificationAssignment
+                {
+                    MessageId = messageId,
+                    CreationDateTime = NpsFormats.DateTimeUtc(now),
+                    Assigner = new PartyOrAgent
+                    {
+                        Agent = BranchAndFinancialInstitution.ForMember(source, source),
+                    },
+                    Assignee = new PartyOrAgent
+                    {
+                        Party = string.IsNullOrEmpty(request.RequestingPartyName)
+                            ? null
+                            : new Party { Name = request.RequestingPartyName },
+                        Agent = BranchAndFinancialInstitution.ForMember(request.RequestingAgentId, request.RequestingAgentId),
+                    },
+                },
+                OriginalAssignment = new OriginalAssignment
+                {
+                    MessageId = request.OriginalMessageId,
+                    CreationDateTime = request.OriginalCreationDateTime,
+                },
+                Reports =
+                [
+                    new VerificationReport
+                    {
+                        OriginalId = request.OriginalMessageId,
+                        Verification = request.Verified,
+                        OriginalPartyAndAccountId = new PartyAndAccountIdentification
+                        {
+                            Account = new CashAccount { Id = new AccountIdentification { Iban = request.AccountNumber } },
+                        },
+                        UpdatedPartyAndAccountId = string.IsNullOrEmpty(request.AccountName)
+                            ? null
+                            : new PartyAndAccountIdentification { Party = new Party { Name = request.AccountName } },
+                    },
+                ],
+                SupplementaryData = request.AccountHolderInfo is null && string.IsNullOrEmpty(request.RiskRating)
+                    ? null
+                    : new SupplementaryData
+                    {
+                        Envelope = new SupplementaryDataEnvelope
+                        {
+                            CustomData = new CustomData
+                            {
+                                CreditorInfo = request.AccountHolderInfo,
+                                TransactionInfo = string.IsNullOrEmpty(request.RiskRating)
+                                    ? null
+                                    : new TransactionInfo { RiskRating = request.RiskRating },
+                            },
+                        },
+                    },
+            },
+        };
+    }
+
     public Pacs002Document CreatePaymentStatusReport(NpsPaymentStatusReportRequest request)
     {
         ArgumentNullException.ThrowIfNull(request);
@@ -177,6 +245,100 @@ public class NpsMessageFactory(IOptions<NpsOptions> options) : INpsMessageFactor
         };
     }
 
+    public Pain001Document CreateCreditTransferInitiation(NpsCreditTransferInitiationRequest request)
+    {
+        ArgumentNullException.ThrowIfNull(request);
+
+        var now = DateTime.UtcNow;
+        var messageId = request.MessageId ?? NpsMessageIdGenerator.NewMessageId(options.Value.SourceId, now);
+        var source = options.Value.SourceId;
+        var debtorAgent = request.DebtorAgentId ?? source;
+        var amount = NpsFormats.Amount(request.Amount);
+
+        return new Pain001Document
+        {
+            CreditTransferInitiation = new CustomerCreditTransferInitiation
+            {
+                GroupHeader = new Pain001GroupHeader
+                {
+                    MessageId = messageId,
+                    CreationDateTime = NpsFormats.DateTimeUtc(now),
+                    NumberOfTransactions = "1",
+                    ControlSum = amount,
+                    InitiatingParty = new InitiatingParty
+                    {
+                        Name = request.InitiatingPartyName ?? options.Value.InstitutionName,
+                        Id = new PartyIdentificationChoice
+                        {
+                            OrganisationId = new OrganisationIdentification
+                            {
+                                Other = new GenericIdentification
+                                {
+                                    SchemeName = new ProprietaryChoice { Code = source },
+                                },
+                            },
+                        },
+                    },
+                    ForwardingAgent = string.IsNullOrEmpty(request.ForwardingAgentBic)
+                        ? null
+                        : new BranchAndFinancialInstitution
+                        {
+                            FinancialInstitutionId = new FinancialInstitutionIdentification { Bicfi = request.ForwardingAgentBic },
+                        },
+                },
+                PaymentInformation = new PaymentInstruction
+                {
+                    PaymentInformationId = request.PaymentInformationId ?? messageId,
+                    BatchBooking = request.BatchBooking,
+                    NumberOfTransactions = "1",
+                    ControlSum = amount,
+                    RequestedExecutionDate = new RequestedExecutionDate
+                    {
+                        Date = NpsFormats.Date(request.RequestedExecutionDate ?? now),
+                    },
+                    Debtor = new Party { Name = request.DebtorName },
+                    DebtorAccount = CashAccount.ForAccount(request.DebtorAccountNumber, request.DebtorAccountName ?? request.DebtorName),
+                    DebtorAgent = BranchAndFinancialInstitution.ForMember(debtorAgent, debtorAgent),
+                    ChargeBearer = request.ChargeBearer,
+                    Transactions =
+                    [
+                        new CreditTransferTransactionInformation
+                        {
+                            PaymentId = new Pain001PaymentIdentification { EndToEndId = request.EndToEndId ?? messageId },
+                            Amount = new AmountChoice
+                            {
+                                InstructedAmount = new CurrencyAndAmount { Currency = request.Currency, Value = amount },
+                            },
+                            CreditorAgent = BranchAndFinancialInstitution.ForMember(request.CreditorAgentId, request.CreditorAgentId),
+                            Creditor = new Party { Name = request.CreditorName },
+                            CreditorAccount = CashAccount.ForAccount(request.CreditorAccountNumber, request.CreditorAccountName ?? request.CreditorName),
+                            RemittanceInformation = string.IsNullOrEmpty(request.Narration)
+                                ? null
+                                : new RemittanceInformation { Unstructured = request.Narration },
+                        },
+                    ],
+                },
+                SupplementaryData = new SupplementaryData
+                {
+                    Envelope = new SupplementaryDataEnvelope
+                    {
+                        CustomData = new CustomData
+                        {
+                            CreditorInfo = request.CreditorInfo,
+                            TransactionInfo = new TransactionInfo
+                            {
+                                TransactionLocation = request.TransactionLocation,
+                                ChannelCode = request.ChannelCode,
+                                FixedCollectionAmount = request.FixedCollectionAmount ? "true" : "false",
+                                MandateCode = request.MandateCode,
+                            },
+                        },
+                    },
+                },
+            },
+        };
+    }
+
     public Pacs028Document CreatePaymentStatusRequest(NpsPaymentStatusQuery request)
     {
         ArgumentNullException.ThrowIfNull(request);
@@ -215,115 +377,4 @@ public class NpsMessageFactory(IOptions<NpsOptions> options) : INpsMessageFactor
             },
         };
     }
-}
-
-/// <summary>Input for building a pacs.008 credit transfer.</summary>
-public class NpsCreditTransferRequest
-{
-    /// <summary>Optional pre-generated 35-character MsgId; generated when null.</summary>
-    public string MessageId { get; set; }
-
-    public string InstructionId { get; set; }
-    public string EndToEndId { get; set; }
-
-    public decimal Amount { get; set; }
-    public DateTime? SettlementDate { get; set; }
-
-    /// <summary>NPS member id of the beneficiary institution.</summary>
-    public string CreditorAgentId { get; set; } = string.Empty;
-
-    public string DebtorName { get; set; } = string.Empty;
-    public string DebtorAccountNumber { get; set; } = string.Empty;
-    public string DebtorAccountName { get; set; }
-
-    public string CreditorName { get; set; } = string.Empty;
-    public string CreditorAccountNumber { get; set; } = string.Empty;
-    public string CreditorAccountName { get; set; }
-
-    /// <summary>Narration, max 140 characters.</summary>
-    public string Narration { get; set; }
-
-    /// <summary>Transaction type code per the NPS TTC dictionary; default "001".</summary>
-    public string TransactionTypeCode { get; set; } = "001";
-
-    public PartyVerificationInfo DebtorInfo { get; set; }
-    public PartyVerificationInfo CreditorInfo { get; set; }
-
-    public string TransactionLocation { get; set; }
-    public string NameEnquiryMessageId { get; set; }
-    public string ChannelCode { get; set; }
-    public string RiskRating { get; set; }
-}
-
-/// <summary>Input for building an acmt.023 name enquiry.</summary>
-public class NpsIdVerificationRequest
-{
-    public string MessageId { get; set; }
-
-    /// <summary>NPS member id of the institution holding the account.</summary>
-    public string AccountAgentId { get; set; } = string.Empty;
-
-    /// <summary>The 10-digit account number to verify.</summary>
-    public string AccountNumber { get; set; } = string.Empty;
-
-    /// <summary>Optional expected name of the account holder.</summary>
-    public string PartyName { get; set; }
-}
-
-/// <summary>Input for building a pacs.002 answering an inbound pacs.008.</summary>
-public class NpsPaymentStatusReportRequest
-{
-    public string MessageId { get; set; }
-
-    /// <summary>NPS member id of the institution that sent the original payment.</summary>
-    public string OriginalSenderId { get; set; } = string.Empty;
-
-    /// <summary>GrpHdr/MsgId of the original pacs.008.</summary>
-    public string OriginalMessageId { get; set; } = string.Empty;
-
-    public string OriginalMessageNameId { get; set; } = "pacs.008.001.12";
-
-    /// <summary>GrpHdr/CreDtTm of the original pacs.008.</summary>
-    public string OriginalCreationDateTime { get; set; } = string.Empty;
-
-    public string OriginalInstructionId { get; set; }
-    public string OriginalEndToEndId { get; set; }
-    public string OriginalTransactionId { get; set; }
-
-    /// <summary>IntrBkSttlmDt of the original payment (ISO-8601 date).</summary>
-    public string OriginalSettlementDate { get; set; }
-
-    /// <summary>ACSC to approve, RJCT to decline. See <see cref="TransactionStatus"/>.</summary>
-    public string Status { get; set; } = TransactionStatus.AcceptedSettlementCompleted;
-
-    /// <summary>AUTH / NAUTH. See <see cref="Constants.StatusId"/>.</summary>
-    public string StatusId { get; set; } = Constants.StatusId.Authorized;
-
-    /// <summary>Reject reason code (registered in the NPS dictionaries), required for RJCT.</summary>
-    public string ReasonCode { get; set; }
-
-    public string ReasonInformation { get; set; }
-}
-
-/// <summary>Input for building a pacs.028 status enquiry.</summary>
-public class NpsPaymentStatusQuery
-{
-    public string MessageId { get; set; }
-
-    /// <summary>NPS member id of the counterparty institution on the original payment.</summary>
-    public string CounterpartyId { get; set; } = string.Empty;
-
-    /// <summary>GrpHdr/MsgId of the original message.</summary>
-    public string OriginalMessageId { get; set; } = string.Empty;
-
-    public string OriginalMessageNameId { get; set; } = "pacs.008.001.12";
-
-    /// <summary>GrpHdr/CreDtTm of the original message.</summary>
-    public string OriginalCreationDateTime { get; set; } = string.Empty;
-
-    /// <summary>CdtTrfTxInf/TxId of the original message.</summary>
-    public string OriginalTransactionId { get; set; } = string.Empty;
-
-    /// <summary>IntrBkSttlmDt of the original payment (ISO-8601 date).</summary>
-    public string OriginalSettlementDate { get; set; }
 }

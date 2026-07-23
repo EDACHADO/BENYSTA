@@ -1,4 +1,5 @@
 using Integration.BusinessLogics;
+using Integration.WebApi.Services;
 using Microsoft.AspNetCore.Http.HttpResults;
 using Nibbs.Nps.Integration;
 using Nibbs.Nps.Integration.Configuration;
@@ -21,6 +22,10 @@ builder.Services.AddNpsIntegration();
 // Business-logic layer: MediatR commands/queries the controllers dispatch to.
 builder.Services.AddIntegrationBusinessLogics();
 
+// Identification Verification flow: answer inbound acmt.023 name enquiries with acmt.024.
+// PlaceholderAccountVerificationService rejects everything — swap in the core-banking lookup.
+builder.Services.AddNpsIdentificationVerificationFlow<PlaceholderAccountVerificationService>();
+
 // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
 builder.Services.AddOpenApi();
 
@@ -34,31 +39,31 @@ if (app.Environment.IsDevelopment())
     app.MapScalarApiReference(options =>
     {
         options
-            .WithTitle("EasyPay Integration API")
+            .WithTitle("NIBBS National Payment Stack (NPS) Integration API")
             .WithDefaultHttpClient(ScalarTarget.CSharp, ScalarClient.HttpClient);
     });
 }
 
 app.MapControllers();
 
-Todo[] sampleTodos =
-[
-    new(1, "Walk the dog"),
-    new(2, "Do the dishes", DateOnly.FromDateTime(DateTime.Now)),
-    new(3, "Do the laundry", DateOnly.FromDateTime(DateTime.Now.AddDays(1))),
-    new(4, "Clean the bathroom"),
-    new(5, "Clean the car", DateOnly.FromDateTime(DateTime.Now.AddDays(2)))
-];
+//Todo[] sampleTodos =
+//[
+//    new(1, "Walk the dog"),
+//    new(2, "Do the dishes", DateOnly.FromDateTime(DateTime.Now)),
+//    new(3, "Do the laundry", DateOnly.FromDateTime(DateTime.Now.AddDays(1))),
+//    new(4, "Clean the bathroom"),
+//    new(5, "Clean the car", DateOnly.FromDateTime(DateTime.Now.AddDays(2)))
+//];
 
-var todosApi = app.MapGroup("/todos");
-todosApi.MapGet("/", () => sampleTodos)
-        .WithName("GetTodos");
+//var todosApi = app.MapGroup("/todos");
+//todosApi.MapGet("/", () => sampleTodos)
+//        .WithName("GetTodos");
 
-todosApi.MapGet("/{id}", Results<Ok<Todo>, NotFound> (int id) =>
-    sampleTodos.FirstOrDefault(a => a.Id == id) is { } todo
-        ? TypedResults.Ok(todo)
-        : TypedResults.NotFound())
-    .WithName("GetTodoById");
+//todosApi.MapGet("/{id}", Results<Ok<Todo>, NotFound> (int id) =>
+//    sampleTodos.FirstOrDefault(a => a.Id == id) is { } todo
+//        ? TypedResults.Ok(todo)
+//        : TypedResults.NotFound())
+//    .WithName("GetTodoById");
 
 app.Run();
 

@@ -14,15 +14,33 @@ public class NpsGatewayOptions
     /// </summary>
     public string BaseUrl { get; set; } = string.Empty;
 
-    /// <summary>Gateway client id issued during onboarding (used by the token reset endpoint).</summary>
+    /// <summary>
+    /// Gateway client id assigned during the credential request (sent in the token
+    /// reset request body as "client_id").
+    /// </summary>
     public string ClientId { get; set; } = string.Empty;
 
-    /// <summary>Gateway client secret / API key issued during onboarding.</summary>
+    /// <summary>
+    /// Gateway client secret assigned during the credential request (sent in the token
+    /// reset request body as "client_secret").
+    /// </summary>
     public string ClientSecret { get; set; } = string.Empty;
 
     /// <summary>
-    /// Extra headers to send on the token reset request, for deployments where the
-    /// gateway expects credentials under specific header names.
+    /// The apiKey assigned during the credential request. Passed in the request header
+    /// of the token reset call only, per the integration guide.
+    /// </summary>
+    public string ApiKey { get; set; } = string.Empty;
+
+    /// <summary>
+    /// OAuth scope sent in the token reset request body. Per the guide this is
+    /// "&lt;client_id&gt;/.default"; leave empty to derive it from <see cref="ClientId"/>.
+    /// </summary>
+    public string Scope { get; set; } = string.Empty;
+
+    /// <summary>
+    /// Additional headers to send on the token reset request, for deployments where the
+    /// gateway expects extra or differently named credential headers.
     /// </summary>
     public Dictionary<string, string> ResetHeaders { get; set; } = new();
 

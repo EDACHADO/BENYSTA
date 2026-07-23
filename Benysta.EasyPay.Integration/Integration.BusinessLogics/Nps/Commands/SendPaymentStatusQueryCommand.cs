@@ -2,7 +2,7 @@ using Integration.BusinessLogics.Nps.Models;
 using MediatR;
 using Microsoft.Extensions.Logging;
 using Nibbs.Nps.Integration.Abstractions;
-using Nibbs.Nps.Integration.Messages;
+using Nibbs.Nps.Integration.RequestModels;
 
 namespace Integration.BusinessLogics.Nps.Commands;
 

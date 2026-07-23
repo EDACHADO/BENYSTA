@@ -14,7 +14,7 @@ namespace Integration.WebApi.Controllers;
 /// </summary>
 [ApiController]
 [Consumes("application/xml")]
-public class WebhookController(IMediator mediator) : ControllerBase
+public class NibbsNPSWebhookController(IMediator mediator) : ControllerBase
 {
     /// <summary>
     /// NPS inbound message callback. One action serves every registered callback path —
@@ -28,14 +28,14 @@ public class WebhookController(IMediator mediator) : ControllerBase
     /// </remarks>
     /// <param name="cancellationToken">Aborts processing when the request is cancelled.</param>
     /// <returns>200 when the message was decrypted, verified and accepted; 400 otherwise.</returns>
-    [HttpPost("nps/pacs008")]
-    [HttpPost("nps/pacs002")]
-    [HttpPost("nps/pacs028")]
-    [HttpPost("nps/acmt023")]
-    [HttpPost("nps/acmt024")]
-    [HttpPost("nps/pain001")]
-    [HttpPost("nps/pain002")]
-    [HttpPost("nps/admi002")]
+    [HttpPost("pacs008")]
+    [HttpPost("pacs002")]
+    [HttpPost("pacs028")]
+    [HttpPost("acmt023")]
+    [HttpPost("acmt024")]
+    [HttpPost("pain001")]
+    [HttpPost("pain002")]
+    [HttpPost("admi002")]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     public async Task<IActionResult> ReceiveAsync(CancellationToken cancellationToken)

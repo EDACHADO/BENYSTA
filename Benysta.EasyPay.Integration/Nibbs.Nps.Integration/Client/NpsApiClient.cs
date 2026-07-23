@@ -1,4 +1,3 @@
-using System.Net;
 using System.Text;
 using Microsoft.Extensions.Options;
 using Nibbs.Nps.Integration.Abstractions;
