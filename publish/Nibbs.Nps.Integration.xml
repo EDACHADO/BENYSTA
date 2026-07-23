@@ -1,0 +1,1262 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>Nibbs.Nps.Integration</name>
+    </assembly>
+    <members>
+        <member name="T:Nibbs.Nps.Integration.Abstractions.INibssInstitutionGatewayClient">
+            <summary>
+            Client for the "NIBSS Institution" request-message service exposed through the
+            NIBSS API Gateway (e.g. https://apitest.nibss-plc.com.ng:1443/nibss-inst).
+            Payment instructions are submitted as pain.001, collections as pain.008;
+            outcomes are delivered asynchronously as pain.002. All calls carry a Bearer
+            access token obtained from the token reset endpoint.
+            </summary>
+        </member>
+        <member name="M:Nibbs.Nps.Integration.Abstractions.INibssInstitutionGatewayClient.ResetAccessTokenAsync(System.Threading.CancellationToken)">
+            <summary>
+            Calls the token reset endpoint (POST /reset) with the onboarding credentials —
+            apiKey in the request header; client_id, scope, client_secret and grant_type in
+            the JSON body — and caches the returned access token, together with its expiry,
+            for subsequent requests.
+            </summary>
+        </member>
+        <member name="M:Nibbs.Nps.Integration.Abstractions.INibssInstitutionGatewayClient.SendCreditTransferInitiationAsync(Nibbs.Nps.Integration.Messages.Pain.Pain001Document,System.Threading.CancellationToken)">
+            <summary>Submits a pain.001 customer credit transfer initiation.</summary>
+        </member>
+        <member name="M:Nibbs.Nps.Integration.Abstractions.INibssInstitutionGatewayClient.SendRawAsync(System.String,System.String,System.Threading.CancellationToken)">
+            <summary>Submits a raw plaintext ISO 20022 message to a gateway endpoint (e.g. pain.008).</summary>
+        </member>
+        <member name="T:Nibbs.Nps.Integration.Abstractions.INpsApiClient">
+            <summary>
+            Client for the NPS switch (https://&lt;nps-host&gt;:8022/nps). Serializes, signs,
+            encrypts and posts ISO 20022 messages, and decrypts/parses switch responses.
+            </summary>
+        </member>
+        <member name="M:Nibbs.Nps.Integration.Abstractions.INpsApiClient.SendCreditTransferAsync(Nibbs.Nps.Integration.Messages.Pacs.Pacs008Document,System.Threading.CancellationToken)">
+            <summary>Sends a pacs.008 FI-to-FI customer credit transfer (payment request).</summary>
+        </member>
+        <member name="M:Nibbs.Nps.Integration.Abstractions.INpsApiClient.SendPaymentStatusReportAsync(Nibbs.Nps.Integration.Messages.Pacs.Pacs002Document,System.Threading.CancellationToken)">
+            <summary>Sends a pacs.002 payment status report (ACSC/RJCT response to an inbound payment).</summary>
+        </member>
+        <member name="M:Nibbs.Nps.Integration.Abstractions.INpsApiClient.SendPaymentStatusRequestAsync(Nibbs.Nps.Integration.Messages.Pacs.Pacs028Document,System.Threading.CancellationToken)">
+            <summary>Sends a pacs.028 payment status request (transaction status query).</summary>
+        </member>
+        <member name="M:Nibbs.Nps.Integration.Abstractions.INpsApiClient.SendIdVerificationRequestAsync(Nibbs.Nps.Integration.Messages.Acmt.Acmt023Document,System.Threading.CancellationToken)">
+            <summary>Sends an acmt.023 identification verification request (name enquiry).</summary>
+        </member>
+        <member name="M:Nibbs.Nps.Integration.Abstractions.INpsApiClient.SendIdVerificationReportAsync(Nibbs.Nps.Integration.Messages.Acmt.Acmt024Document,System.Threading.CancellationToken)">
+            <summary>Sends an acmt.024 identification verification report (name enquiry response).</summary>
+        </member>
+        <member name="M:Nibbs.Nps.Integration.Abstractions.INpsApiClient.SendCreditTransferInitiationAsync(Nibbs.Nps.Integration.Messages.Pain.Pain001Document,System.Threading.CancellationToken)">
+            <summary>Sends a pain.001 customer credit transfer initiation to the NIBSS Institution via NPS.</summary>
+        </member>
+        <member name="M:Nibbs.Nps.Integration.Abstractions.INpsApiClient.SendCustomerPaymentStatusReportAsync(Nibbs.Nps.Integration.Messages.Pain.Pain002Document,System.Threading.CancellationToken)">
+            <summary>Sends a pain.002 customer payment status report.</summary>
+        </member>
+        <member name="M:Nibbs.Nps.Integration.Abstractions.INpsApiClient.SendAsync``1(``0,System.Threading.CancellationToken)">
+            <summary>Sends any typed NPS document to its family endpoint.</summary>
+        </member>
+        <member name="M:Nibbs.Nps.Integration.Abstractions.INpsApiClient.SendRawAsync(Nibbs.Nps.Integration.Constants.NpsMessageType,System.String,System.Threading.CancellationToken)">
+            <summary>
+            Sends a raw plaintext ISO 20022 XML message of the given type (signed and encrypted
+            by the client before transmission). Use for message types without a typed model
+            (pacs.003, pain.008–pain.014, camt.052/053/060).
+            </summary>
+        </member>
+        <member name="M:Nibbs.Nps.Integration.Abstractions.INpsApiClient.GetParticipantsAsync(System.Threading.CancellationToken)">
+            <summary>Gets the list of NPS participants with their active/inactive statuses.</summary>
+        </member>
+        <member name="T:Nibbs.Nps.Integration.Abstractions.INpsDocument">
+            <summary>
+            Marker for the root Document type of an ISO 20022 NPS message.
+            </summary>
+        </member>
+        <member name="P:Nibbs.Nps.Integration.Abstractions.INpsDocument.MessageType">
+            <summary>The NPS message type this document represents.</summary>
+        </member>
+        <member name="T:Nibbs.Nps.Integration.Abstractions.INpsKeyProvider">
+            <summary>
+            Supplies the RSA keys used to secure NPS messages:
+            the institution's private key (signing outbound, decrypting inbound) and the
+            NIBSS public key (encrypting outbound, validating inbound signatures).
+            </summary>
+        </member>
+        <member name="M:Nibbs.Nps.Integration.Abstractions.INpsKeyProvider.GetInstitutionPrivateKey">
+            <summary>Your institution's RSA-2048 private key.</summary>
+        </member>
+        <member name="M:Nibbs.Nps.Integration.Abstractions.INpsKeyProvider.GetNibssPublicKey">
+            <summary>The NIBSS/NPS RSA public key.</summary>
+        </member>
+        <member name="T:Nibbs.Nps.Integration.Abstractions.INpsMessageFactory">
+            <summary>
+            Builds NPS messages pre-populated with the fixed values, identifiers and formats
+            mandated by the integration guide (35-character MsgId, CLRG settlement, RTNS
+            clearing channel, SLEV charge bearer, ISO-8601 timestamps, 2-dp amounts).
+            </summary>
+        </member>
+        <member name="M:Nibbs.Nps.Integration.Abstractions.INpsMessageFactory.CreateCreditTransfer(Nibbs.Nps.Integration.RequestModels.NpsCreditTransferRequest)">
+            <summary>Creates a single pacs.008 credit transfer to another NPS participant.</summary>
+        </member>
+        <member name="M:Nibbs.Nps.Integration.Abstractions.INpsMessageFactory.CreateIdVerificationRequest(Nibbs.Nps.Integration.RequestModels.NpsIdVerificationRequest)">
+            <summary>Creates an acmt.023 name enquiry for an account at another participant.</summary>
+        </member>
+        <member name="M:Nibbs.Nps.Integration.Abstractions.INpsMessageFactory.CreateIdVerificationReport(Nibbs.Nps.Integration.RequestModels.NpsIdVerificationReportRequest)">
+            <summary>
+            Creates an acmt.024 identification verification report answering an inbound
+            acmt.023 name enquiry for an account held at this institution.
+            </summary>
+        </member>
+        <member name="M:Nibbs.Nps.Integration.Abstractions.INpsMessageFactory.CreatePaymentStatusReport(Nibbs.Nps.Integration.RequestModels.NpsPaymentStatusReportRequest)">
+            <summary>Creates a pacs.002 status report answering an inbound pacs.008.</summary>
+        </member>
+        <member name="M:Nibbs.Nps.Integration.Abstractions.INpsMessageFactory.CreatePaymentStatusRequest(Nibbs.Nps.Integration.RequestModels.NpsPaymentStatusQuery)">
+            <summary>Creates a pacs.028 status request for a previously sent pacs.008.</summary>
+        </member>
+        <member name="M:Nibbs.Nps.Integration.Abstractions.INpsMessageFactory.CreateCreditTransferInitiation(Nibbs.Nps.Integration.RequestModels.NpsCreditTransferInitiationRequest)">
+            <summary>
+            Creates a pain.001 customer credit transfer initiation for the NIBSS Institution
+            service. The outcome arrives asynchronously as pain.002.
+            </summary>
+        </member>
+        <member name="T:Nibbs.Nps.Integration.Abstractions.INpsMessageHandler`1">
+            <summary>
+            Application hook for reacting to a specific inbound NPS message type pushed by
+            NIBSS to your institution's callback URL (e.g. a pacs.008 credit transfer or an
+            acmt.023 name enquiry). Register implementations with
+            <c>services.AddNpsMessageHandler&lt;THandler, TDocument&gt;()</c>; the
+            <see cref="T:Nibbs.Nps.Integration.Inbound.INpsWebhookProcessor"/> resolves and invokes every handler registered
+            for the concrete document type of the decrypted message.
+            </summary>
+            <typeparam name="TDocument">
+            The ISO 20022 document type to handle, e.g. <c>Pacs008Document</c>.
+            </typeparam>
+        </member>
+        <member name="M:Nibbs.Nps.Integration.Abstractions.INpsMessageHandler`1.HandleAsync(`0,Nibbs.Nps.Integration.Inbound.NpsInboundMessage,System.Threading.CancellationToken)">
+            <summary>
+            Handles a decrypted, signature-verified inbound document.
+            Keep the work fast — NPS expects an immediate HTTP 200 acknowledgment;
+            offload long-running processing to a queue or background job.
+            </summary>
+            <param name="document">The typed ISO 20022 document.</param>
+            <param name="context">
+            The full inbound message (message type, decrypted plaintext XML).
+            </param>
+            <param name="cancellationToken">Aborts the handling operation.</param>
+        </member>
+        <member name="T:Nibbs.Nps.Integration.Abstractions.INpsMessageProtector">
+            <summary>
+            Applies and removes NPS message protection.
+            Outbound: sign the plaintext document (enveloped XMLDSIG), then encrypt the content
+            of the business root element — the signature stays outside the encrypted block.
+            Inbound: decrypt the payload first, then validate the signature against the
+            restored plaintext (the two steps must be handled together per the guide).
+            </summary>
+        </member>
+        <member name="M:Nibbs.Nps.Integration.Abstractions.INpsMessageProtector.Protect(System.String)">
+            <summary>Signs and encrypts a raw plaintext ISO 20022 message for transmission.</summary>
+        </member>
+        <member name="M:Nibbs.Nps.Integration.Abstractions.INpsMessageProtector.Unprotect(System.String)">
+            <summary>
+            Decrypts an inbound message and validates its signature.
+            Returns the plaintext XML.
+            </summary>
+        </member>
+        <member name="F:Nibbs.Nps.Integration.Client.NibssInstitutionGatewayClient.ExpirySafetyMarginSeconds">
+            <summary>Refresh this many seconds before the advertised expiry so a token never dies mid-flight.</summary>
+        </member>
+        <member name="F:Nibbs.Nps.Integration.Client.NibssInstitutionGatewayClient.ErrorCodeInvalidClientSecret">
+            <summary>The client secret is invalid (per the reset endpoint's 401 contract).</summary>
+        </member>
+        <member name="F:Nibbs.Nps.Integration.Client.NibssInstitutionGatewayClient.ErrorCodeExpiredClientSecret">
+            <summary>The client secret has expired and must be regenerated (per the reset endpoint's 401 contract).</summary>
+        </member>
+        <member name="M:Nibbs.Nps.Integration.Client.NibssInstitutionGatewayClient.GetOrRefreshAccessTokenAsync(System.Threading.CancellationToken)">
+            <summary>Returns the cached access token, resetting it first when absent or (nearly) expired.</summary>
+        </member>
+        <member name="M:Nibbs.Nps.Integration.Client.NibssInstitutionGatewayClient.BuildResetFailureMessage(System.Int32,System.String)">
+            <summary>
+            Builds the failure message from the reset endpoint's error contract
+            ({ timestamp, error_codes, error_description, error }), including remediation
+            hints for the documented client-secret error codes.
+            </summary>
+        </member>
+        <member name="T:Nibbs.Nps.Integration.Client.NpsGatewayTokenResponse">
+            <summary>
+            Success response of the NIBSS API Gateway token reset endpoint (POST /reset),
+            per the NPS integration guide.
+            </summary>
+        </member>
+        <member name="P:Nibbs.Nps.Integration.Client.NpsGatewayTokenResponse.TokenType">
+            <summary>The token type, e.g. "Bearer".</summary>
+        </member>
+        <member name="P:Nibbs.Nps.Integration.Client.NpsGatewayTokenResponse.ExpiresIn">
+            <summary>The time the token expires, in seconds.</summary>
+        </member>
+        <member name="P:Nibbs.Nps.Integration.Client.NpsGatewayTokenResponse.ExtExpiresIn">
+            <summary>The extended lifetime of the access token, in seconds.</summary>
+        </member>
+        <member name="P:Nibbs.Nps.Integration.Client.NpsGatewayTokenResponse.AccessToken">
+            <summary>The access token to pass in the Authorization header of subsequent requests.</summary>
+        </member>
+        <member name="T:Nibbs.Nps.Integration.Client.NpsResponse">
+            <summary>
+            Outcome of posting a message to the NPS switch.
+            A success only acknowledges receipt — business outcomes (e.g. pacs.002) arrive
+            asynchronously on your institution's inbound callback URL.
+            </summary>
+        </member>
+        <member name="P:Nibbs.Nps.Integration.Client.NpsResponse.IsSuccess">
+            <summary>True when the switch acknowledged the message (HTTP 2xx).</summary>
+        </member>
+        <member name="P:Nibbs.Nps.Integration.Client.NpsResponse.RawBody">
+            <summary>The response body exactly as received (possibly signed/encrypted XML).</summary>
+        </member>
+        <member name="P:Nibbs.Nps.Integration.Client.NpsResponse.PlainBody">
+            <summary>The decrypted response body, when a body was present and could be unprotected.</summary>
+        </member>
+        <member name="P:Nibbs.Nps.Integration.Client.NpsResponse.Rejection">
+            <summary>
+            The admi.002 Message Reject details when the switch returned a validation
+            rejection (HTTP 400 with a response body).
+            </summary>
+        </member>
+        <member name="P:Nibbs.Nps.Integration.Client.NpsResponse.IsDecryptionFailure">
+            <summary>
+            True for an HTTP 400 without a response body — per the guide this means the
+            switch could not decrypt the message (an encryption/key issue).
+            </summary>
+        </member>
+        <member name="M:Nibbs.Nps.Integration.Client.NpsResponse.EnsureAccepted">
+            <summary>Throws <see cref="T:Nibbs.Nps.Integration.Exceptions.NpsMessageRejectedException"/> when the switch rejected the message.</summary>
+        </member>
+        <member name="T:Nibbs.Nps.Integration.Configuration.NpsGatewayOptions">
+            <summary>
+            Options for integrating with the "NIBSS Institution" request-message service
+            through the NIBSS API Gateway (pain.001 / pain.008 / pain.002, token reset).
+            </summary>
+        </member>
+        <member name="P:Nibbs.Nps.Integration.Configuration.NpsGatewayOptions.BaseUrl">
+            <summary>
+            Base URL of the NIBSS Institution service on the API Gateway,
+            e.g. "https://apitest.nibss-plc.com.ng:1443/nibss-inst".
+            </summary>
+        </member>
+        <member name="P:Nibbs.Nps.Integration.Configuration.NpsGatewayOptions.ClientId">
+            <summary>
+            Gateway client id assigned during the credential request (sent in the token
+            reset request body as "client_id").
+            </summary>
+        </member>
+        <member name="P:Nibbs.Nps.Integration.Configuration.NpsGatewayOptions.ClientSecret">
+            <summary>
+            Gateway client secret assigned during the credential request (sent in the token
+            reset request body as "client_secret").
+            </summary>
+        </member>
+        <member name="P:Nibbs.Nps.Integration.Configuration.NpsGatewayOptions.ApiKey">
+            <summary>
+            The apiKey assigned during the credential request. Passed in the request header
+            of the token reset call only, per the integration guide.
+            </summary>
+        </member>
+        <member name="P:Nibbs.Nps.Integration.Configuration.NpsGatewayOptions.Scope">
+            <summary>
+            OAuth scope sent in the token reset request body. Per the guide this is
+            "&lt;client_id&gt;/.default"; leave empty to derive it from <see cref="P:Nibbs.Nps.Integration.Configuration.NpsGatewayOptions.ClientId"/>.
+            </summary>
+        </member>
+        <member name="P:Nibbs.Nps.Integration.Configuration.NpsGatewayOptions.ResetHeaders">
+            <summary>
+            Additional headers to send on the token reset request, for deployments where the
+            gateway expects extra or differently named credential headers.
+            </summary>
+        </member>
+        <member name="P:Nibbs.Nps.Integration.Configuration.NpsGatewayOptions.Timeout">
+            <summary>HTTP timeout for gateway calls.</summary>
+        </member>
+        <member name="T:Nibbs.Nps.Integration.Configuration.NpsOptions">
+            <summary>
+            Options for direct integration with the NPS switch.
+            </summary>
+        </member>
+        <member name="P:Nibbs.Nps.Integration.Configuration.NpsOptions.BaseUrl">
+            <summary>
+            Base URL of the NPS switch including the /nps segment,
+            e.g. "https://nps-test.nibss-plc.com.ng:8022/nps" (internet VPN)
+            or "https://192.234.10.105:8022/nps" (extranet VPN).
+            </summary>
+        </member>
+        <member name="P:Nibbs.Nps.Integration.Configuration.NpsOptions.SourceId">
+            <summary>
+            Your institution's NPS member/source identifier (ClrSysMmbId/MmbId), e.g. "999058".
+            Used as the InstgAgt member id and as the MsgId prefix.
+            </summary>
+        </member>
+        <member name="P:Nibbs.Nps.Integration.Configuration.NpsOptions.InstitutionName">
+            <summary>Display name of your institution (used e.g. in acmt.023 Assgnr/Pty/Nm).</summary>
+        </member>
+        <member name="P:Nibbs.Nps.Integration.Configuration.NpsOptions.PrivateKeyPem">
+            <summary>
+            PEM (PKCS#8 or PKCS#1) content or file path of your institution's RSA-2048 private key.
+            The matching public key must have been shared with NIBSS during onboarding.
+            </summary>
+        </member>
+        <member name="P:Nibbs.Nps.Integration.Configuration.NpsOptions.NibssPublicKeyPem">
+            <summary>
+            PEM content or file path of the NIBSS/NPS RSA public key
+            (used to encrypt outbound payloads and validate inbound signatures).
+            </summary>
+        </member>
+        <member name="P:Nibbs.Nps.Integration.Configuration.NpsOptions.Timeout">
+            <summary>HTTP timeout for calls to the switch.</summary>
+        </member>
+        <member name="P:Nibbs.Nps.Integration.Configuration.NpsOptions.ProtectOutboundMessages">
+            <summary>
+            When true (default) outbound messages are signed and their business payload encrypted
+            before transmission. Only disable for schema-validation sandboxes.
+            </summary>
+        </member>
+        <member name="P:Nibbs.Nps.Integration.Configuration.NpsOptions.UseGcmEncryption">
+            <summary>
+            When true, uses AES-256-GCM for outbound payload encryption; otherwise AES-256-CBC
+            (the algorithm shown in the guide's .NET encryption sample). NIBSS responses use GCM;
+            both are always supported for inbound decryption.
+            </summary>
+        </member>
+        <member name="P:Nibbs.Nps.Integration.Configuration.NpsOptions.ValidateInboundSignatures">
+            <summary>
+            When true, inbound message signatures are validated after decryption. Default true.
+            </summary>
+        </member>
+        <member name="T:Nibbs.Nps.Integration.Constants.TransactionStatus">
+            <summary>
+            ISO 20022 transaction/group status codes used in pacs.002 / pain.002 / pain.012 / pain.014.
+            </summary>
+        </member>
+        <member name="F:Nibbs.Nps.Integration.Constants.TransactionStatus.AcceptedSettlementCompleted">
+            <summary>Accepted Settlement Completed — payment approved and settled.</summary>
+        </member>
+        <member name="F:Nibbs.Nps.Integration.Constants.TransactionStatus.AcceptedSettlementInProcess">
+            <summary>Accepted Settlement In Process.</summary>
+        </member>
+        <member name="F:Nibbs.Nps.Integration.Constants.TransactionStatus.AcceptedCustomerProfile">
+            <summary>Accepted Customer Profile — e.g. mandate/RTP responses (pain.012/pain.014).</summary>
+        </member>
+        <member name="F:Nibbs.Nps.Integration.Constants.TransactionStatus.AcceptedTechnicalValidation">
+            <summary>Accepted Technical Validation.</summary>
+        </member>
+        <member name="F:Nibbs.Nps.Integration.Constants.TransactionStatus.Rejected">
+            <summary>Rejected.</summary>
+        </member>
+        <member name="F:Nibbs.Nps.Integration.Constants.TransactionStatus.Pending">
+            <summary>Pending.</summary>
+        </member>
+        <member name="T:Nibbs.Nps.Integration.Constants.StatusId">
+            <summary>
+            Status identification values used in pacs.002 TxInfAndSts/StsId,
+            indicating whether the reporting bank authorized the payment.
+            </summary>
+        </member>
+        <member name="T:Nibbs.Nps.Integration.Constants.SettlementMethod">
+            <summary>Settlement method — NPS settles via clearing.</summary>
+        </member>
+        <member name="T:Nibbs.Nps.Integration.Constants.ClearingChannel">
+            <summary>Clearing channel codes.</summary>
+        </member>
+        <member name="F:Nibbs.Nps.Integration.Constants.ClearingChannel.RealTimeNetSettlement">
+            <summary>Real Time Net Settlement system — fixed value on NPS.</summary>
+        </member>
+        <member name="T:Nibbs.Nps.Integration.Constants.ChargeBearer">
+            <summary>Charge bearer codes.</summary>
+        </member>
+        <member name="F:Nibbs.Nps.Integration.Constants.ChargeBearer.FollowingServiceLevel">
+            <summary>Following service level — fixed value on NPS pacs.008.</summary>
+        </member>
+        <member name="T:Nibbs.Nps.Integration.Constants.LocalInstrument">
+            <summary>Local instrument proprietary codes identifying the business process.</summary>
+        </member>
+        <member name="F:Nibbs.Nps.Integration.Constants.LocalInstrument.CreditTransferAccountToAccount">
+            <summary>Credit transfer account-to-account (default per the NPS samples).</summary>
+        </member>
+        <member name="T:Nibbs.Nps.Integration.Constants.NpsIdType">
+            <summary>
+            Identification types accepted in the NPS supplementary data
+            (Debtor/Creditor Info IdType). Per the guide: if NIN, account tier must be 1;
+            JTBTIN / FIRSTIN / RC Number require a corporate account designation.
+            </summary>
+        </member>
+        <member name="T:Nibbs.Nps.Integration.Constants.NpsChannelCode">
+            <summary>Channel codes for the supplementary TransactionInfo/ChannelCode field.</summary>
+        </member>
+        <member name="T:Nibbs.Nps.Integration.Constants.AccountDesignation">
+            <summary>Account designation values for supplementary data.</summary>
+        </member>
+        <member name="T:Nibbs.Nps.Integration.Constants.NpsEndpoints">
+            <summary>
+            Relative endpoint paths on the NPS switch (base URL: https://&lt;nps-host&gt;:8022/nps)
+            and on the NIBSS Institution API Gateway.
+            Per the integration guide, all messages of a family are posted to the family endpoint,
+            e.g. pacs.008/pacs.002/pacs.028 are all posted to "/nps/pacs".
+            </summary>
+        </member>
+        <member name="F:Nibbs.Nps.Integration.Constants.NpsEndpoints.Pacs">
+            <summary>Endpoint for pacs.* messages (credit transfer, status report/request, direct debit).</summary>
+        </member>
+        <member name="F:Nibbs.Nps.Integration.Constants.NpsEndpoints.Acmt">
+            <summary>Endpoint for acmt.* messages (identification verification / name enquiry).</summary>
+        </member>
+        <member name="F:Nibbs.Nps.Integration.Constants.NpsEndpoints.Pain">
+            <summary>Endpoint for pain.* messages (payment initiation, mandates, request to pay).</summary>
+        </member>
+        <member name="F:Nibbs.Nps.Integration.Constants.NpsEndpoints.Camt">
+            <summary>Endpoint for camt.* messages (account reporting).</summary>
+        </member>
+        <member name="F:Nibbs.Nps.Integration.Constants.NpsEndpoints.GetParticipants">
+            <summary>Endpoint returning the list of NPS participants and their statuses.</summary>
+        </member>
+        <member name="T:Nibbs.Nps.Integration.Constants.NpsEndpoints.Gateway">
+            <summary>Gateway (NIBSS Institution) endpoints.</summary>
+        </member>
+        <member name="T:Nibbs.Nps.Integration.Constants.NpsMessageType">
+            <summary>
+            ISO 20022 message types supported by the NIBSS National Payment Stack (NPS).
+            </summary>
+        </member>
+        <member name="F:Nibbs.Nps.Integration.Constants.NpsMessageType.Pacs008">
+            <summary>pacs.008 — FI to FI Customer Credit Transfer (payment request).</summary>
+        </member>
+        <member name="F:Nibbs.Nps.Integration.Constants.NpsMessageType.Pacs002">
+            <summary>pacs.002 — FI to FI Payment Status Report (payment response ACSC/RJCT).</summary>
+        </member>
+        <member name="F:Nibbs.Nps.Integration.Constants.NpsMessageType.Pacs003">
+            <summary>pacs.003 — FI to FI Customer Direct Debit.</summary>
+        </member>
+        <member name="F:Nibbs.Nps.Integration.Constants.NpsMessageType.Pacs028">
+            <summary>pacs.028 — FI to FI Payment Status Request (transaction status query).</summary>
+        </member>
+        <member name="F:Nibbs.Nps.Integration.Constants.NpsMessageType.Acmt023">
+            <summary>acmt.023 — Identification Verification Request (name enquiry).</summary>
+        </member>
+        <member name="F:Nibbs.Nps.Integration.Constants.NpsMessageType.Acmt024">
+            <summary>acmt.024 — Identification Verification Report (name enquiry response).</summary>
+        </member>
+        <member name="F:Nibbs.Nps.Integration.Constants.NpsMessageType.Pain001">
+            <summary>pain.001 — Customer Credit Transfer Initiation.</summary>
+        </member>
+        <member name="F:Nibbs.Nps.Integration.Constants.NpsMessageType.Pain002">
+            <summary>pain.002 — Customer Payment Status Report.</summary>
+        </member>
+        <member name="F:Nibbs.Nps.Integration.Constants.NpsMessageType.Pain008">
+            <summary>pain.008 — Customer Direct Debit Initiation (collection instruction).</summary>
+        </member>
+        <member name="F:Nibbs.Nps.Integration.Constants.NpsMessageType.Pain009">
+            <summary>pain.009 — Mandate Initiation Request.</summary>
+        </member>
+        <member name="F:Nibbs.Nps.Integration.Constants.NpsMessageType.Pain010">
+            <summary>pain.010 — Mandate Amendment Request.</summary>
+        </member>
+        <member name="F:Nibbs.Nps.Integration.Constants.NpsMessageType.Pain011">
+            <summary>pain.011 — Mandate Cancellation Request.</summary>
+        </member>
+        <member name="F:Nibbs.Nps.Integration.Constants.NpsMessageType.Pain012">
+            <summary>pain.012 — Mandate Acceptance Report.</summary>
+        </member>
+        <member name="F:Nibbs.Nps.Integration.Constants.NpsMessageType.Pain013">
+            <summary>pain.013 — Creditor Payment Activation Request (Request to Pay).</summary>
+        </member>
+        <member name="F:Nibbs.Nps.Integration.Constants.NpsMessageType.Pain014">
+            <summary>pain.014 — Creditor Payment Activation Request Status Report.</summary>
+        </member>
+        <member name="F:Nibbs.Nps.Integration.Constants.NpsMessageType.Camt052">
+            <summary>camt.052 — Bank to Customer Account Report (intraday).</summary>
+        </member>
+        <member name="F:Nibbs.Nps.Integration.Constants.NpsMessageType.Camt053">
+            <summary>camt.053 — Bank to Customer Statement (end of day).</summary>
+        </member>
+        <member name="F:Nibbs.Nps.Integration.Constants.NpsMessageType.Camt060">
+            <summary>camt.060 — Account Reporting Request.</summary>
+        </member>
+        <member name="F:Nibbs.Nps.Integration.Constants.NpsMessageType.Admi002">
+            <summary>admi.002 — Message Reject (technical/validation rejection from the switch).</summary>
+        </member>
+        <member name="T:Nibbs.Nps.Integration.Constants.NpsMessageTypeInfo">
+            <summary>
+            Static metadata for each NPS message type: ISO 20022 message name identifier,
+            XML document namespace, business (root payload) element name and the NPS
+            endpoint family the message is posted to.
+            </summary>
+        </member>
+        <member name="M:Nibbs.Nps.Integration.Constants.NpsMessageTypeInfo.#ctor(Nibbs.Nps.Integration.Constants.NpsMessageType,System.String,System.String,System.String,System.String)">
+            <summary>
+            Static metadata for each NPS message type: ISO 20022 message name identifier,
+            XML document namespace, business (root payload) element name and the NPS
+            endpoint family the message is posted to.
+            </summary>
+        </member>
+        <member name="M:Nibbs.Nps.Integration.Constants.NpsMessageTypeInfo.FromXmlNamespace(System.String)">
+            <summary>
+            Resolves the message type from an ISO 20022 document namespace,
+            e.g. "urn:iso:std:iso:20022:tech:xsd:pacs.008.001.12".
+            </summary>
+        </member>
+        <member name="T:Nibbs.Nps.Integration.Constants.NpsXmlNamespaces">
+            <summary>
+            ISO 20022 XML document namespaces used on the NPS platform, plus the
+            W3C security namespaces used for message signing and encryption.
+            </summary>
+        </member>
+        <member name="M:Nibbs.Nps.Integration.Cryptography.NpsMessageProtector.FindBusinessElement(System.Xml.XmlDocument)">
+            <summary>
+            The business element is the first element child of the ISO Document root that is
+            not the XMLDSIG Signature (e.g. FIToFICstmrCdtTrf, IdVrfctnReq, MsgRjct).
+            </summary>
+        </member>
+        <member name="T:Nibbs.Nps.Integration.Cryptography.NpsPemKeyProvider">
+            <summary>
+            <see cref="T:Nibbs.Nps.Integration.Abstractions.INpsKeyProvider"/> that loads the RSA keys from the PEM material configured
+            in <see cref="T:Nibbs.Nps.Integration.Configuration.NpsOptions"/>. <see cref="P:Nibbs.Nps.Integration.Configuration.NpsOptions.PrivateKeyPem"/> and
+            <see cref="P:Nibbs.Nps.Integration.Configuration.NpsOptions.NibssPublicKeyPem"/> may each hold either the PEM text itself
+            or a path to a PEM file. The private key may be PKCS#8 ("BEGIN PRIVATE KEY") or
+            PKCS#1 ("BEGIN RSA PRIVATE KEY"); the NIBSS key may be an SPKI/PKCS#1 public key
+            ("BEGIN PUBLIC KEY" / "BEGIN RSA PUBLIC KEY") or an X.509 certificate
+            ("BEGIN CERTIFICATE"), from which the public key is extracted.
+            Keys are loaded once and cached for the lifetime of the provider.
+            </summary>
+        </member>
+        <member name="M:Nibbs.Nps.Integration.Cryptography.NpsPemKeyProvider.ResolvePem(System.String,System.String)">
+            <summary>
+            Returns the PEM text for a setting that may hold either inline PEM content
+            or the path of a PEM file.
+            </summary>
+        </member>
+        <member name="T:Nibbs.Nps.Integration.Cryptography.NpsXmlEncryptor">
+            <summary>
+            Encrypts and decrypts the business payload of NPS ISO 20022 messages per the
+            W3C XML Encryption profile used by the switch: the CONTENT of the business root
+            element (e.g. FIToFICstmrCdtTrf, IdVrfctnReq) is replaced with an EncryptedData
+            element carrying an AES-256 session key wrapped with RSA-OAEP.
+            Outbound encryption supports AES-256-CBC (the guide's .NET sample) and AES-256-GCM;
+            inbound decryption transparently handles both (NIBSS responses use GCM).
+            </summary>
+        </member>
+        <member name="M:Nibbs.Nps.Integration.Cryptography.NpsXmlEncryptor.EncryptContent(System.Xml.XmlElement,System.Security.Cryptography.RSA,System.Boolean)">
+            <summary>
+            Encrypts the content of <paramref name="element"/> in place using an AES-256
+            session key wrapped with the recipient's RSA public key (RSA-OAEP).
+            </summary>
+        </member>
+        <member name="M:Nibbs.Nps.Integration.Cryptography.NpsXmlEncryptor.DecryptDocument(System.Xml.XmlDocument,System.Security.Cryptography.RSA)">
+            <summary>
+            Decrypts every EncryptedData element in <paramref name="document"/> in place,
+            unwrapping the AES session key with <paramref name="recipientPrivateKey"/>.
+            Returns false when the document contains no EncryptedData element.
+            </summary>
+        </member>
+        <member name="T:Nibbs.Nps.Integration.Cryptography.NpsXmlSigner">
+            <summary>
+            Signs and validates NPS ISO 20022 messages per the W3C XMLDSIG profile mandated
+            by the integration guide: enveloped RSA-SHA256 signature over the whole document,
+            SHA-256 digest, inclusive C14N canonicalization, appended to the Document element.
+            </summary>
+        </member>
+        <member name="M:Nibbs.Nps.Integration.Cryptography.NpsXmlSigner.Sign(System.Xml.XmlDocument,System.Security.Cryptography.RSA)">
+            <summary>
+            Computes an enveloped signature over <paramref name="document"/> and appends the
+            resulting Signature element to the document root.
+            </summary>
+        </member>
+        <member name="M:Nibbs.Nps.Integration.Cryptography.NpsXmlSigner.Validate(System.Xml.XmlDocument,System.Security.Cryptography.RSA)">
+            <summary>
+            Validates the enveloped Signature element of an inbound message using the
+            sender's (NIBSS) public key. Returns false when the signature does not verify.
+            </summary>
+        </member>
+        <member name="M:Nibbs.Nps.Integration.Cryptography.NpsXmlSigner.RemoveSignature(System.Xml.XmlDocument)">
+            <summary>Removes the enveloped Signature element (if any) from the document root.</summary>
+        </member>
+        <member name="T:Nibbs.Nps.Integration.Exceptions.NpsIntegrationException">
+            <summary>Base exception for all NPS integration failures.</summary>
+        </member>
+        <member name="T:Nibbs.Nps.Integration.Exceptions.NpsSecurityException">
+            <summary>
+            Raised when signing, signature validation, encryption or decryption of an
+            ISO 20022 message fails.
+            </summary>
+        </member>
+        <member name="T:Nibbs.Nps.Integration.Exceptions.NpsMessageRejectedException">
+            <summary>
+            Raised when the switch rejects a message at technical/validation level
+            (HTTP 400 carrying an admi.002 Message Reject payload).
+            </summary>
+        </member>
+        <member name="P:Nibbs.Nps.Integration.Exceptions.NpsMessageRejectedException.Rejection">
+            <summary>The decrypted admi.002 rejection returned by the switch.</summary>
+        </member>
+        <member name="P:Nibbs.Nps.Integration.Exceptions.NpsMessageRejectedException.ReasonCode">
+            <summary>Rejection reason code, e.g. "DT01", "AC01".</summary>
+        </member>
+        <member name="P:Nibbs.Nps.Integration.Exceptions.NpsMessageRejectedException.OriginalMessageId">
+            <summary>MsgId of the message that was rejected.</summary>
+        </member>
+        <member name="T:Nibbs.Nps.Integration.Helpers.NpsFormats">
+            <summary>
+            Formatting helpers matching the value formats mandated by the NPS integration guide.
+            </summary>
+        </member>
+        <member name="M:Nibbs.Nps.Integration.Helpers.NpsFormats.DateTimeUtc(System.DateTime)">
+            <summary>ISO-8601 date-time with milliseconds and UTC designator, e.g. 2025-02-25T09:52:22.954Z.</summary>
+        </member>
+        <member name="M:Nibbs.Nps.Integration.Helpers.NpsFormats.DateTimeWithOffset(System.DateTimeOffset)">
+            <summary>ISO-8601 date-time preserving the supplied offset, e.g. 2026-04-14T11:24:03.138+01:00.</summary>
+        </member>
+        <member name="M:Nibbs.Nps.Integration.Helpers.NpsFormats.Date(System.DateTime)">
+            <summary>ISO-8601 date, e.g. 2025-02-25.</summary>
+        </member>
+        <member name="M:Nibbs.Nps.Integration.Helpers.NpsFormats.Amount(System.Decimal)">
+            <summary>Amount with exactly two decimal places, e.g. 78000.00.</summary>
+        </member>
+        <member name="T:Nibbs.Nps.Integration.Helpers.NpsMessageIdGenerator">
+            <summary>
+            Generates NPS message identifiers in the mandated 35-character format:
+            sourceId + yyyyMMddHHmmss + random digits (padded to exactly 35 characters).
+            </summary>
+        </member>
+        <member name="M:Nibbs.Nps.Integration.Helpers.NpsMessageIdGenerator.NewMessageId(System.String,System.Nullable{System.DateTime})">
+            <summary>
+            Creates a new 35-character MsgId for the given institution source id (e.g. "999058").
+            </summary>
+        </member>
+        <member name="T:Nibbs.Nps.Integration.Inbound.NpsInboundMessage">
+            <summary>
+            A decrypted, signature-verified message delivered by NPS to your institution's
+            inbound callback URL (https://&lt;your-base-url&gt;/&lt;npsMessageType&gt;).
+            </summary>
+        </member>
+        <member name="P:Nibbs.Nps.Integration.Inbound.NpsInboundMessage.PlainXml">
+            <summary>The decrypted plaintext ISO 20022 XML.</summary>
+        </member>
+        <member name="P:Nibbs.Nps.Integration.Inbound.NpsInboundMessage.Document">
+            <summary>
+            The typed document when the message type has a model
+            (pacs.008/002/028, acmt.023/024, pain.001/002, admi.002); otherwise null.
+            </summary>
+        </member>
+        <member name="M:Nibbs.Nps.Integration.Inbound.NpsInboundMessage.GetDocument``1">
+            <summary>Returns the typed document, or throws when it is not of the requested type.</summary>
+        </member>
+        <member name="T:Nibbs.Nps.Integration.Inbound.INpsInboundMessageProcessor">
+            <summary>
+            Processes signed/encrypted messages that NPS pushes to your institution's inbound
+            endpoint: decrypts the payload, validates the signature, detects the message type
+            and materializes the typed document. Your endpoint should return HTTP 200
+            immediately after successful processing, per the integration guide.
+            </summary>
+        </member>
+        <member name="M:Nibbs.Nps.Integration.Inbound.INpsInboundMessageProcessor.Process(System.String)">
+            <summary>Decrypts, verifies and parses a raw inbound NPS message body.</summary>
+        </member>
+        <member name="T:Nibbs.Nps.Integration.Inbound.INpsWebhookProcessor">
+            <summary>
+            End-to-end pipeline for a webhook request pushed by NIBSS NPS to one of your
+            institution's callback URLs (https://&lt;baseURL&gt;/&lt;npsMessageType&gt;):
+            decrypts and signature-verifies the raw body, materializes the typed ISO 20022
+            document and dispatches it to every registered
+            <see cref="T:Nibbs.Nps.Integration.Abstractions.INpsMessageHandler`1"/> for that document type.
+            </summary>
+        </member>
+        <member name="M:Nibbs.Nps.Integration.Inbound.INpsWebhookProcessor.ProcessAsync(System.String,System.Threading.CancellationToken)">
+            <summary>
+            Processes a raw inbound webhook body and dispatches the decrypted document
+            to the registered message handlers.
+            </summary>
+            <param name="rawXml">The signed+encrypted XML exactly as received from NPS.</param>
+            <param name="cancellationToken">Aborts handler execution.</param>
+            <exception cref="T:Nibbs.Nps.Integration.Exceptions.NpsSecurityException">
+            Decryption or signature validation failed — the caller should answer HTTP 400.
+            </exception>
+            <exception cref="T:Nibbs.Nps.Integration.Exceptions.NpsIntegrationException">A message handler failed.</exception>
+        </member>
+        <member name="T:Nibbs.Nps.Integration.Inbound.NpsWebhookResult">
+            <summary>The outcome of processing an inbound NPS webhook request.</summary>
+            <param name="MessageType">The detected ISO 20022 message type.</param>
+            <param name="PlainXml">The decrypted plaintext ISO 20022 XML.</param>
+            <param name="Document">The typed document, or null when the type has no model.</param>
+            <param name="HandlerCount">How many registered handlers were invoked.</param>
+            <param name="WasEncrypted">Whether the payload arrived encrypted.</param>
+            <param name="SignatureValidated">Whether an XMLDSIG signature was present and verified.</param>
+        </member>
+        <member name="M:Nibbs.Nps.Integration.Inbound.NpsWebhookResult.#ctor(Nibbs.Nps.Integration.Constants.NpsMessageType,System.String,Nibbs.Nps.Integration.Abstractions.INpsDocument,System.Int32,System.Boolean,System.Boolean)">
+            <summary>The outcome of processing an inbound NPS webhook request.</summary>
+            <param name="MessageType">The detected ISO 20022 message type.</param>
+            <param name="PlainXml">The decrypted plaintext ISO 20022 XML.</param>
+            <param name="Document">The typed document, or null when the type has no model.</param>
+            <param name="HandlerCount">How many registered handlers were invoked.</param>
+            <param name="WasEncrypted">Whether the payload arrived encrypted.</param>
+            <param name="SignatureValidated">Whether an XMLDSIG signature was present and verified.</param>
+        </member>
+        <member name="P:Nibbs.Nps.Integration.Inbound.NpsWebhookResult.MessageType">
+            <summary>The detected ISO 20022 message type.</summary>
+        </member>
+        <member name="P:Nibbs.Nps.Integration.Inbound.NpsWebhookResult.PlainXml">
+            <summary>The decrypted plaintext ISO 20022 XML.</summary>
+        </member>
+        <member name="P:Nibbs.Nps.Integration.Inbound.NpsWebhookResult.Document">
+            <summary>The typed document, or null when the type has no model.</summary>
+        </member>
+        <member name="P:Nibbs.Nps.Integration.Inbound.NpsWebhookResult.HandlerCount">
+            <summary>How many registered handlers were invoked.</summary>
+        </member>
+        <member name="P:Nibbs.Nps.Integration.Inbound.NpsWebhookResult.WasEncrypted">
+            <summary>Whether the payload arrived encrypted.</summary>
+        </member>
+        <member name="P:Nibbs.Nps.Integration.Inbound.NpsWebhookResult.SignatureValidated">
+            <summary>Whether an XMLDSIG signature was present and verified.</summary>
+        </member>
+        <member name="M:Nibbs.Nps.Integration.Inbound.NpsWebhookProcessor.DispatchAsync(Nibbs.Nps.Integration.Abstractions.INpsDocument,Nibbs.Nps.Integration.Inbound.NpsInboundMessage,System.Threading.CancellationToken)">
+            <summary>
+            Resolves every <see cref="T:Nibbs.Nps.Integration.Abstractions.INpsMessageHandler`1"/> registered for the
+            concrete document type and invokes them sequentially.
+            </summary>
+        </member>
+        <member name="T:Nibbs.Nps.Integration.Messages.Acmt.Acmt023Document">
+            <summary>
+            acmt.023 — Identification Verification Request (name enquiry). Sent by the debtor's
+            bank to validate beneficiary account details before initiating a payment.
+            The responding bank answers with acmt.024.
+            </summary>
+        </member>
+        <member name="P:Nibbs.Nps.Integration.Messages.Acmt.IdentificationVerificationRequest.Verifications">
+            <summary>Vrfctn — account(s) to verify (up to 10 per the NPS name enquiry service).</summary>
+        </member>
+        <member name="P:Nibbs.Nps.Integration.Messages.Acmt.IdentificationAssignment.MessageId">
+            <summary>MsgId — unique 35-character message reference.</summary>
+        </member>
+        <member name="P:Nibbs.Nps.Integration.Messages.Acmt.IdentificationAssignment.CreationDateTime">
+            <summary>CreDtTm — creation date-time, ISO-8601.</summary>
+        </member>
+        <member name="P:Nibbs.Nps.Integration.Messages.Acmt.IdentificationAssignment.Creator">
+            <summary>Cretr — creating party (sending institution name).</summary>
+        </member>
+        <member name="P:Nibbs.Nps.Integration.Messages.Acmt.IdentificationAssignment.Assigner">
+            <summary>Assgnr — assigning party/agent (the requesting institution).</summary>
+        </member>
+        <member name="P:Nibbs.Nps.Integration.Messages.Acmt.IdentificationAssignment.Assignee">
+            <summary>Assgne — assignee agent (the institution holding the account to verify).</summary>
+        </member>
+        <member name="T:Nibbs.Nps.Integration.Messages.Acmt.PartyOrAgent">
+            <summary>Pty/Agt choice used by Cretr, Assgnr and Assgne.</summary>
+        </member>
+        <member name="P:Nibbs.Nps.Integration.Messages.Acmt.IdentificationVerification.Id">
+            <summary>Id — verification identification; same as MsgId in the samples.</summary>
+        </member>
+        <member name="P:Nibbs.Nps.Integration.Messages.Acmt.PartyAndAccountIdentification.Party">
+            <summary>Pty — optional name of the party to be verified.</summary>
+        </member>
+        <member name="P:Nibbs.Nps.Integration.Messages.Acmt.PartyAndAccountIdentification.Account">
+            <summary>Acct — account of the party to be verified.</summary>
+        </member>
+        <member name="T:Nibbs.Nps.Integration.Messages.Acmt.Acmt024Document">
+            <summary>
+            acmt.024 — Identification Verification Report. Sent by the account-holding bank
+            in response to an acmt.023 request, carrying the verification result and the
+            account name plus supplementary KYC details.
+            </summary>
+        </member>
+        <member name="P:Nibbs.Nps.Integration.Messages.Acmt.IdentificationVerificationReport.OriginalAssignment">
+            <summary>OrgnlAssgnmt — MsgId/CreDtTm of the acmt.023 request being answered.</summary>
+        </member>
+        <member name="P:Nibbs.Nps.Integration.Messages.Acmt.VerificationReport.OriginalId">
+            <summary>OrgnlId — MsgId of the acmt.023 request received.</summary>
+        </member>
+        <member name="P:Nibbs.Nps.Integration.Messages.Acmt.VerificationReport.Verification">
+            <summary>Vrfctn — verification outcome (true/false).</summary>
+        </member>
+        <member name="P:Nibbs.Nps.Integration.Messages.Acmt.VerificationReport.OriginalPartyAndAccountId">
+            <summary>OrgnlPtyAndAcctId — the account that was verified.</summary>
+        </member>
+        <member name="P:Nibbs.Nps.Integration.Messages.Acmt.VerificationReport.UpdatedPartyAndAccountId">
+            <summary>UpdtdPtyAndAcctId — the resolved name on the account.</summary>
+        </member>
+        <member name="T:Nibbs.Nps.Integration.Messages.Admi.Admi002Document">
+            <summary>
+            admi.002 — Message Reject. Returned by NPS (with HTTP 400) when a submitted message
+            fails schema validation, contains invalid/missing fields, violates formatting rules
+            or could not be processed.
+            </summary>
+        </member>
+        <member name="P:Nibbs.Nps.Integration.Messages.Admi.RelatedReference.Reference">
+            <summary>Ref — MsgId of the original message being rejected.</summary>
+        </member>
+        <member name="P:Nibbs.Nps.Integration.Messages.Admi.RejectionReason.RejectingPartyReason">
+            <summary>RjctgPtyRsn — rejection reason code (e.g. DT01, AC01) per the scheme dictionary.</summary>
+        </member>
+        <member name="P:Nibbs.Nps.Integration.Messages.Admi.RejectionReason.RejectionDateTime">
+            <summary>RjctnDtTm — date-time of rejection, ISO-8601.</summary>
+        </member>
+        <member name="P:Nibbs.Nps.Integration.Messages.Admi.RejectionReason.ReasonDescription">
+            <summary>RsnDesc — human-readable description of the rejection reason.</summary>
+        </member>
+        <member name="T:Nibbs.Nps.Integration.Messages.Common.ClearingSystemMemberIdentification">
+            <summary>ClrSysMmbId — clearing system member identification.</summary>
+        </member>
+        <member name="P:Nibbs.Nps.Integration.Messages.Common.ClearingSystemMemberIdentification.MemberId">
+            <summary>MmbId — NPS member identifier of the institution, e.g. "999058".</summary>
+        </member>
+        <member name="T:Nibbs.Nps.Integration.Messages.Common.FinancialInstitutionIdentification">
+            <summary>FinInstnId — financial institution identification.</summary>
+        </member>
+        <member name="P:Nibbs.Nps.Integration.Messages.Common.FinancialInstitutionIdentification.Bicfi">
+            <summary>BICFI — BIC of the institution. NPS typically carries the member id here too.</summary>
+        </member>
+        <member name="M:Nibbs.Nps.Integration.Messages.Common.FinancialInstitutionIdentification.ForMember(System.String,System.String)">
+            <summary>Emits an empty &lt;BICFI/&gt; element when <see cref="P:Nibbs.Nps.Integration.Messages.Common.FinancialInstitutionIdentification.Bicfi"/> is null, matching the NPS samples.</summary>
+        </member>
+        <member name="T:Nibbs.Nps.Integration.Messages.Common.BranchAndFinancialInstitution">
+            <summary>
+            Agent element (InstgAgt / InstdAgt / DbtrAgt / CdtrAgt / Agt / FwdgAgt) wrapping FinInstnId.
+            </summary>
+        </member>
+        <member name="T:Nibbs.Nps.Integration.Messages.Common.Party">
+            <summary>Simple party (Dbtr / Cdtr / Pty) carrying a name.</summary>
+        </member>
+        <member name="T:Nibbs.Nps.Integration.Messages.Common.CashAccount">
+            <summary>Acct / DbtrAcct / CdtrAcct — account with NUBAN carried in the IBAN tag.</summary>
+        </member>
+        <member name="P:Nibbs.Nps.Integration.Messages.Common.CashAccount.Name">
+            <summary>Nm — name on the account.</summary>
+        </member>
+        <member name="T:Nibbs.Nps.Integration.Messages.Common.AccountIdentification">
+            <summary>Account identification. NPS uses the IBAN tag for the 10-digit NUBAN.</summary>
+        </member>
+        <member name="P:Nibbs.Nps.Integration.Messages.Common.AccountIdentification.Iban">
+            <summary>IBAN — the 10-digit account number (NUBAN) per the NPS guide.</summary>
+        </member>
+        <member name="T:Nibbs.Nps.Integration.Messages.Common.CurrencyAndAmount">
+            <summary>Amount element carrying a currency attribute, e.g. IntrBkSttlmAmt / InstdAmt.</summary>
+        </member>
+        <member name="P:Nibbs.Nps.Integration.Messages.Common.CurrencyAndAmount.Value">
+            <summary>Amount rendered with two decimal places, e.g. "78000.00".</summary>
+        </member>
+        <member name="T:Nibbs.Nps.Integration.Messages.Common.SettlementInformation">
+            <summary>SttlmInf — settlement information.</summary>
+        </member>
+        <member name="P:Nibbs.Nps.Integration.Messages.Common.SettlementInformation.SettlementMethod">
+            <summary>SttlmMtd — fixed value CLRG (settlement via clearing).</summary>
+        </member>
+        <member name="T:Nibbs.Nps.Integration.Messages.Common.PaymentTypeInformation">
+            <summary>PmtTpInf — payment type information.</summary>
+        </member>
+        <member name="P:Nibbs.Nps.Integration.Messages.Common.PaymentTypeInformation.ClearingChannel">
+            <summary>ClrChanl — fixed value RTNS.</summary>
+        </member>
+        <member name="P:Nibbs.Nps.Integration.Messages.Common.PaymentTypeInformation.CategoryPurpose">
+            <summary>CtgyPurp — transaction type code as defined in the NPS TTC dictionary.</summary>
+        </member>
+        <member name="T:Nibbs.Nps.Integration.Messages.Common.ProprietaryChoice">
+            <summary>Generic Prtry/Cd choice used by SvcLvl, LclInstrm, CtgyPurp, Rsn etc.</summary>
+        </member>
+        <member name="T:Nibbs.Nps.Integration.Messages.Common.InstructionForNextAgent">
+            <summary>InstrForNxtAgt — instruction for the next agent.</summary>
+        </member>
+        <member name="T:Nibbs.Nps.Integration.Messages.Common.RemittanceInformation">
+            <summary>RmtInf — remittance information (narration, max 140 characters).</summary>
+        </member>
+        <member name="T:Nibbs.Nps.Integration.Messages.Common.SupplementaryData">
+            <summary>
+            SplmtryData — NPS proprietary supplementary block carrying KYC and transaction metadata.
+            </summary>
+        </member>
+        <member name="P:Nibbs.Nps.Integration.Messages.Common.SupplementaryData.PlaceAndName">
+            <summary>PlcAndNm — fixed value "AdditionalVerificationDetails" on NPS.</summary>
+        </member>
+        <member name="T:Nibbs.Nps.Integration.Messages.Common.CustomData">
+            <summary>NPS custom data: debtor/creditor KYC details and transaction metadata.</summary>
+        </member>
+        <member name="T:Nibbs.Nps.Integration.Messages.Common.PartyVerificationInfo">
+            <summary>KYC identification details of a debtor or creditor.</summary>
+        </member>
+        <member name="P:Nibbs.Nps.Integration.Messages.Common.PartyVerificationInfo.AccountDesignation">
+            <summary>1 = individual, 2 = corporate. See <see cref="T:Nibbs.Nps.Integration.Constants.AccountDesignation"/>.</summary>
+        </member>
+        <member name="P:Nibbs.Nps.Integration.Messages.Common.PartyVerificationInfo.IdType">
+            <summary>BVN, NIN, JTBTIN, FIRSTIN or RC Number. See <see cref="T:Nibbs.Nps.Integration.Constants.NpsIdType"/>.</summary>
+        </member>
+        <member name="T:Nibbs.Nps.Integration.Messages.Common.PartyMetadata">
+            <summary>Free-form metadata container (DebtorMetadata / CreditorMetadata).</summary>
+        </member>
+        <member name="T:Nibbs.Nps.Integration.Messages.Common.TransactionInfo">
+            <summary>Transaction metadata carried in the supplementary block.</summary>
+        </member>
+        <member name="P:Nibbs.Nps.Integration.Messages.Common.TransactionInfo.TransactionLocation">
+            <summary>Geo-coordinates or location reference of the transaction.</summary>
+        </member>
+        <member name="P:Nibbs.Nps.Integration.Messages.Common.TransactionInfo.NameEnquiryMessageId">
+            <summary>MsgId of the preceding acmt.023 name enquiry, when one was performed.</summary>
+        </member>
+        <member name="P:Nibbs.Nps.Integration.Messages.Common.TransactionInfo.ChannelCode">
+            <summary>Channel code. See <see cref="T:Nibbs.Nps.Integration.Constants.NpsChannelCode"/>.</summary>
+        </member>
+        <member name="P:Nibbs.Nps.Integration.Messages.Common.TransactionInfo.FixedCollectionAmount">
+            <summary>pain.001/pain.008 only — fixed collection amount indicator ("true"/"false").</summary>
+        </member>
+        <member name="P:Nibbs.Nps.Integration.Messages.Common.TransactionInfo.MandateCode">
+            <summary>pain.001/pain.008 only — mandate reference code.</summary>
+        </member>
+        <member name="T:Nibbs.Nps.Integration.Messages.Pacs.Pacs002Document">
+            <summary>
+            pacs.002 — FI to FI Payment Status Report. Communicates the outcome (ACSC/RJCT)
+            of a previously received pacs.008/pacs.003, or answers a pacs.028 status request.
+            </summary>
+        </member>
+        <member name="T:Nibbs.Nps.Integration.Messages.Pacs.StatusGroupHeader">
+            <summary>Group header shared by pacs.002 and pacs.028.</summary>
+        </member>
+        <member name="P:Nibbs.Nps.Integration.Messages.Pacs.OriginalGroupInformationAndStatus.OriginalMessageId">
+            <summary>OrgnlMsgId — MsgId of the original pacs.008 (GrpHdr/MsgId).</summary>
+        </member>
+        <member name="P:Nibbs.Nps.Integration.Messages.Pacs.OriginalGroupInformationAndStatus.OriginalMessageNameId">
+            <summary>OrgnlMsgNmId — e.g. "pacs.008.001.12".</summary>
+        </member>
+        <member name="P:Nibbs.Nps.Integration.Messages.Pacs.OriginalGroupInformationAndStatus.OriginalCreationDateTime">
+            <summary>OrgnlCreDtTm — CreDtTm of the original message.</summary>
+        </member>
+        <member name="P:Nibbs.Nps.Integration.Messages.Pacs.OriginalGroupInformationAndStatus.GroupStatus">
+            <summary>GrpSts — group status, e.g. ACSC or RJCT. See <see cref="T:Nibbs.Nps.Integration.Constants.TransactionStatus"/>.</summary>
+        </member>
+        <member name="P:Nibbs.Nps.Integration.Messages.Pacs.TransactionInformationAndStatus.StatusId">
+            <summary>StsId — AUTH / NAUTH, set by the reporting bank.</summary>
+        </member>
+        <member name="P:Nibbs.Nps.Integration.Messages.Pacs.TransactionInformationAndStatus.TransactionStatus">
+            <summary>TxSts — transaction status (present on NPS-generated reports).</summary>
+        </member>
+        <member name="P:Nibbs.Nps.Integration.Messages.Pacs.TransactionInformationAndStatus.StatusReason">
+            <summary>StsRsnInf — status reason (mandatory when the payment is not accepted).</summary>
+        </member>
+        <member name="P:Nibbs.Nps.Integration.Messages.Pacs.OriginalTransactionReference.InterbankSettlementDate">
+            <summary>IntrBkSttlmDt — settlement date of the original payment.</summary>
+        </member>
+        <member name="T:Nibbs.Nps.Integration.Messages.Pacs.Pacs008Document">
+            <summary>
+            pacs.008 — FI to FI Customer Credit Transfer. Sent by the originator (debtor) bank
+            to NPS to move funds to the beneficiary (creditor) bank.
+            </summary>
+        </member>
+        <member name="P:Nibbs.Nps.Integration.Messages.Pacs.Pacs008GroupHeader.MessageId">
+            <summary>MsgId — unique 35-character message reference.</summary>
+        </member>
+        <member name="P:Nibbs.Nps.Integration.Messages.Pacs.Pacs008GroupHeader.CreationDateTime">
+            <summary>CreDtTm — creation date-time, ISO-8601.</summary>
+        </member>
+        <member name="P:Nibbs.Nps.Integration.Messages.Pacs.Pacs008GroupHeader.BatchBooking">
+            <summary>BtchBookg — single transfer, fixed "false" on NPS.</summary>
+        </member>
+        <member name="P:Nibbs.Nps.Integration.Messages.Pacs.Pacs008GroupHeader.NumberOfTransactions">
+            <summary>NbOfTxs — fixed value 1 (higher values are rejected).</summary>
+        </member>
+        <member name="P:Nibbs.Nps.Integration.Messages.Pacs.Pacs008GroupHeader.InstructingAgent">
+            <summary>InstgAgt — sending participant.</summary>
+        </member>
+        <member name="P:Nibbs.Nps.Integration.Messages.Pacs.Pacs008GroupHeader.InstructedAgent">
+            <summary>InstdAgt — receiving participant.</summary>
+        </member>
+        <member name="P:Nibbs.Nps.Integration.Messages.Pacs.CreditTransferTransaction.InterbankSettlementAmount">
+            <summary>IntrBkSttlmAmt — payment amount and currency.</summary>
+        </member>
+        <member name="P:Nibbs.Nps.Integration.Messages.Pacs.CreditTransferTransaction.InterbankSettlementDate">
+            <summary>IntrBkSttlmDt — requested settlement date (ISO-8601 date).</summary>
+        </member>
+        <member name="P:Nibbs.Nps.Integration.Messages.Pacs.CreditTransferTransaction.ChargeBearer">
+            <summary>ChrgBr — charges bearer, fixed SLEV.</summary>
+        </member>
+        <member name="P:Nibbs.Nps.Integration.Messages.Pacs.CreditTransferTransaction.Debtor">
+            <summary>Dbtr — debtor (sender) details.</summary>
+        </member>
+        <member name="P:Nibbs.Nps.Integration.Messages.Pacs.CreditTransferTransaction.Creditor">
+            <summary>Cdtr — creditor (beneficiary) details.</summary>
+        </member>
+        <member name="P:Nibbs.Nps.Integration.Messages.Pacs.PaymentIdentification.InstructionId">
+            <summary>InstrId — instruction identifier (internal sender reference or same as TxId).</summary>
+        </member>
+        <member name="P:Nibbs.Nps.Integration.Messages.Pacs.PaymentIdentification.EndToEndId">
+            <summary>EndToEndId — end-to-end reference; not verified for uniqueness.</summary>
+        </member>
+        <member name="P:Nibbs.Nps.Integration.Messages.Pacs.PaymentIdentification.TransactionId">
+            <summary>TxId — unique transaction identifier; same as MsgId when no internal id exists.</summary>
+        </member>
+        <member name="T:Nibbs.Nps.Integration.Messages.Pacs.Pacs028Document">
+            <summary>
+            pacs.028 — FI to FI Payment Status Request. Used to query the final status of a
+            previously submitted pacs.008/pacs.002 when the expected response was not
+            received within the timeout defined in the Operations Guide. NPS answers with pacs.002
+            (or HTTP 404 when the original transaction is not found).
+            </summary>
+        </member>
+        <member name="P:Nibbs.Nps.Integration.Messages.Pacs.OriginalGroupInformation.OriginalMessageId">
+            <summary>OrgnlMsgId — as taken from the original pacs.008 GrpHdr/MsgId.</summary>
+        </member>
+        <member name="P:Nibbs.Nps.Integration.Messages.Pacs.OriginalGroupInformation.OriginalMessageNameId">
+            <summary>OrgnlMsgNmId — e.g. "pacs.008.001.12".</summary>
+        </member>
+        <member name="P:Nibbs.Nps.Integration.Messages.Pacs.OriginalGroupInformation.OriginalCreationDateTime">
+            <summary>OrgnlCreDtTm — as taken from the original pacs.008 GrpHdr/CreDtTm.</summary>
+        </member>
+        <member name="P:Nibbs.Nps.Integration.Messages.Pacs.StatusRequestTransactionInformation.StatusRequestId">
+            <summary>StsReqId — status request id; same value as the message's MsgId.</summary>
+        </member>
+        <member name="P:Nibbs.Nps.Integration.Messages.Pacs.StatusRequestTransactionInformation.OriginalTransactionId">
+            <summary>OrgnlTxId — as taken from the original pacs.008 CdtTrfTxInf/TxId.</summary>
+        </member>
+        <member name="T:Nibbs.Nps.Integration.Messages.Pain.Pain001Document">
+            <summary>
+            pain.001 — Customer Credit Transfer Initiation. Submitted to the NIBSS Institution
+            (directly over NPS or via the API Gateway) to execute a customer-to-institution
+            credit transfer. The final outcome is delivered asynchronously as pain.002.
+            </summary>
+        </member>
+        <member name="P:Nibbs.Nps.Integration.Messages.Pain.Pain001GroupHeader.ControlSum">
+            <summary>CtrlSum — total of all transaction amounts, 2 decimal places.</summary>
+        </member>
+        <member name="P:Nibbs.Nps.Integration.Messages.Pain.PaymentInstruction.PaymentMethod">
+            <summary>PmtMtd — payment method, fixed "TRF".</summary>
+        </member>
+        <member name="P:Nibbs.Nps.Integration.Messages.Pain.RequestedExecutionDate.Date">
+            <summary>Dt — requested execution date, ISO-8601 date.</summary>
+        </member>
+        <member name="P:Nibbs.Nps.Integration.Messages.Pain.AmountChoice.InstructedAmount">
+            <summary>InstdAmt — instructed amount and currency.</summary>
+        </member>
+        <member name="T:Nibbs.Nps.Integration.Messages.Pain.Pain002Document">
+            <summary>
+            pain.002 — Customer Payment Status Report. Communicates the combined outcome
+            (Successful / Partial / Failed) of a pain.001 or pain.008 instruction.
+            </summary>
+        </member>
+        <member name="P:Nibbs.Nps.Integration.Messages.Pain.OriginalPaymentInformationAndStatus.OriginalPaymentInformationId">
+            <summary>OrgnlPmtInfId — PmtInfId of the original pain.001.</summary>
+        </member>
+        <member name="P:Nibbs.Nps.Integration.Messages.Pain.PaymentTransactionStatus.TransactionStatus">
+            <summary>TxSts — e.g. ACSC, ACCP, RJCT. See <see cref="P:Nibbs.Nps.Integration.Messages.Pain.PaymentTransactionStatus.TransactionStatus"/>.</summary>
+        </member>
+        <member name="M:Nibbs.Nps.Integration.NibbsNpsStartupExtensions.AddNpsIntegration(Microsoft.Extensions.DependencyInjection.IServiceCollection,System.Action{Nibbs.Nps.Integration.Configuration.NpsOptions})">
+            <summary>
+            Registers the NPS integration services: key provider, message protector,
+            message factory, inbound processor and the <see cref="T:Nibbs.Nps.Integration.Abstractions.INpsApiClient"/> HTTP client.
+            </summary>
+        </member>
+        <member name="M:Nibbs.Nps.Integration.NibbsNpsStartupExtensions.AddNpsIntegration(Microsoft.Extensions.DependencyInjection.IServiceCollection)">
+            <summary>
+            Registers the NPS integration services, expecting <see cref="T:Nibbs.Nps.Integration.Configuration.NpsOptions"/> to be
+            configured elsewhere (e.g. services.Configure&lt;NpsOptions&gt;(configuration.GetSection(NpsOptions.SectionName))).
+            </summary>
+        </member>
+        <member name="M:Nibbs.Nps.Integration.NibbsNpsStartupExtensions.AddNibssInstitutionGateway(Microsoft.Extensions.DependencyInjection.IServiceCollection,System.Action{Nibbs.Nps.Integration.Configuration.NpsGatewayOptions})">
+            <summary>
+            Additionally registers the <see cref="T:Nibbs.Nps.Integration.Abstractions.INibssInstitutionGatewayClient"/> for the
+            NIBSS Institution request-message service on the API Gateway.
+            </summary>
+        </member>
+        <member name="M:Nibbs.Nps.Integration.NibbsNpsStartupExtensions.AddNpsMessageHandler``2(Microsoft.Extensions.DependencyInjection.IServiceCollection)">
+            <summary>
+            Registers an <see cref="T:Nibbs.Nps.Integration.Abstractions.INpsMessageHandler`1"/> implementation that is
+            invoked by the <see cref="T:Nibbs.Nps.Integration.Inbound.INpsWebhookProcessor"/> whenever NPS pushes an inbound
+            message of the given document type. Multiple handlers may be registered per
+            document type; each distinct implementation is registered once (scoped).
+            </summary>
+            <typeparam name="THandler">The handler implementation.</typeparam>
+            <typeparam name="TDocument">The ISO 20022 document type it handles, e.g. Pacs008Document.</typeparam>
+        </member>
+        <member name="T:Nibbs.Nps.Integration.RequestModels.NpsCreditTransferInitiationRequest">
+            <summary>
+            Input for building a pain.001 Customer Credit Transfer Initiation per the NPS
+            integration guide. The final outcome is delivered asynchronously as pain.002.
+            </summary>
+        </member>
+        <member name="P:Nibbs.Nps.Integration.RequestModels.NpsCreditTransferInitiationRequest.MessageId">
+            <summary>Optional pre-generated 35-character MsgId; generated when null.</summary>
+        </member>
+        <member name="P:Nibbs.Nps.Integration.RequestModels.NpsCreditTransferInitiationRequest.PaymentInformationId">
+            <summary>PmtInfId — payment information identification; defaults to the MsgId.</summary>
+        </member>
+        <member name="P:Nibbs.Nps.Integration.RequestModels.NpsCreditTransferInitiationRequest.EndToEndId">
+            <summary>EndToEndId (max 35 characters); defaults to the MsgId.</summary>
+        </member>
+        <member name="P:Nibbs.Nps.Integration.RequestModels.NpsCreditTransferInitiationRequest.RequestedExecutionDate">
+            <summary>ReqdExctnDt — requested execution date; defaults to today.</summary>
+        </member>
+        <member name="P:Nibbs.Nps.Integration.RequestModels.NpsCreditTransferInitiationRequest.BatchBooking">
+            <summary>BtchBookg — batch booking indicator; false for a single instruction.</summary>
+        </member>
+        <member name="P:Nibbs.Nps.Integration.RequestModels.NpsCreditTransferInitiationRequest.ChargeBearer">
+            <summary>ChrgBr — charge bearer; SLEV per the guide unless agreed otherwise.</summary>
+        </member>
+        <member name="P:Nibbs.Nps.Integration.RequestModels.NpsCreditTransferInitiationRequest.InitiatingPartyName">
+            <summary>InitgPty/Nm — defaults to the configured institution name.</summary>
+        </member>
+        <member name="P:Nibbs.Nps.Integration.RequestModels.NpsCreditTransferInitiationRequest.ForwardingAgentBic">
+            <summary>FwdgAgt/FinInstnId/BICFI — optional; the element is omitted when null.</summary>
+        </member>
+        <member name="P:Nibbs.Nps.Integration.RequestModels.NpsCreditTransferInitiationRequest.DebtorAgentId">
+            <summary>NPS member id of the debtor's institution; defaults to the configured SourceId.</summary>
+        </member>
+        <member name="P:Nibbs.Nps.Integration.RequestModels.NpsCreditTransferInitiationRequest.CreditorAgentId">
+            <summary>NPS member id of the beneficiary institution.</summary>
+        </member>
+        <member name="P:Nibbs.Nps.Integration.RequestModels.NpsCreditTransferInitiationRequest.Narration">
+            <summary>Narration (RmtInf/Ustrd), max 140 characters; optional.</summary>
+        </member>
+        <member name="P:Nibbs.Nps.Integration.RequestModels.NpsCreditTransferInitiationRequest.CreditorInfo">
+            <summary>SplmtryData creditor KYC block (AccountDesignation, IdType, IdValue, AccountTier) — mandatory per the guide.</summary>
+        </member>
+        <member name="P:Nibbs.Nps.Integration.RequestModels.NpsCreditTransferInitiationRequest.TransactionLocation">
+            <summary>Transaction location coordinates or reference — mandatory per the guide.</summary>
+        </member>
+        <member name="P:Nibbs.Nps.Integration.RequestModels.NpsCreditTransferInitiationRequest.ChannelCode">
+            <summary>Channel code (1 bank teller, 2 internet banking, 3 mobile app, …) — mandatory per the guide.</summary>
+        </member>
+        <member name="P:Nibbs.Nps.Integration.RequestModels.NpsCreditTransferInitiationRequest.FixedCollectionAmount">
+            <summary>Fixed collection amount indicator — mandatory per the guide.</summary>
+        </member>
+        <member name="P:Nibbs.Nps.Integration.RequestModels.NpsCreditTransferInitiationRequest.MandateCode">
+            <summary>Mandate reference code; optional.</summary>
+        </member>
+        <member name="T:Nibbs.Nps.Integration.RequestModels.NpsCreditTransferRequest">
+            <summary>Input for building a pacs.008 credit transfer.</summary>
+        </member>
+        <member name="P:Nibbs.Nps.Integration.RequestModels.NpsCreditTransferRequest.MessageId">
+            <summary>Optional pre-generated 35-character MsgId; generated when null.</summary>
+        </member>
+        <member name="P:Nibbs.Nps.Integration.RequestModels.NpsCreditTransferRequest.CreditorAgentId">
+            <summary>NPS member id of the beneficiary institution.</summary>
+        </member>
+        <member name="P:Nibbs.Nps.Integration.RequestModels.NpsCreditTransferRequest.Narration">
+            <summary>Narration, max 140 characters.</summary>
+        </member>
+        <member name="P:Nibbs.Nps.Integration.RequestModels.NpsCreditTransferRequest.TransactionTypeCode">
+            <summary>Transaction type code per the NPS TTC dictionary; default "001".</summary>
+        </member>
+        <member name="T:Nibbs.Nps.Integration.RequestModels.NpsIdVerificationReportRequest">
+            <summary>
+            Input for building an acmt.024 Identification Verification Report — the answer to
+            an inbound acmt.023 name enquiry, carrying the verification outcome, the resolved
+            account name and the account holder's KYC details.
+            </summary>
+        </member>
+        <member name="P:Nibbs.Nps.Integration.RequestModels.NpsIdVerificationReportRequest.MessageId">
+            <summary>Optional pre-generated 35-character MsgId; generated when null.</summary>
+        </member>
+        <member name="P:Nibbs.Nps.Integration.RequestModels.NpsIdVerificationReportRequest.OriginalMessageId">
+            <summary>MsgId of the acmt.023 request being answered (OrgnlAssgnmt/MsgId and Rpt/OrgnlId).</summary>
+        </member>
+        <member name="P:Nibbs.Nps.Integration.RequestModels.NpsIdVerificationReportRequest.OriginalCreationDateTime">
+            <summary>CreDtTm of the acmt.023 request being answered, exactly as received.</summary>
+        </member>
+        <member name="P:Nibbs.Nps.Integration.RequestModels.NpsIdVerificationReportRequest.RequestingAgentId">
+            <summary>NPS member id of the institution that sent the acmt.023 (becomes the Assgne agent).</summary>
+        </member>
+        <member name="P:Nibbs.Nps.Integration.RequestModels.NpsIdVerificationReportRequest.RequestingPartyName">
+            <summary>Name of the requesting institution (Assgne/Pty/Nm); optional.</summary>
+        </member>
+        <member name="P:Nibbs.Nps.Integration.RequestModels.NpsIdVerificationReportRequest.Verified">
+            <summary>Vrfctn — whether the account details were verified successfully.</summary>
+        </member>
+        <member name="P:Nibbs.Nps.Integration.RequestModels.NpsIdVerificationReportRequest.AccountNumber">
+            <summary>The account number that was verified (echoed in OrgnlPtyAndAcctId).</summary>
+        </member>
+        <member name="P:Nibbs.Nps.Integration.RequestModels.NpsIdVerificationReportRequest.AccountName">
+            <summary>The resolved name on the account (UpdtdPtyAndAcctId/Pty/Nm); mandatory when verified.</summary>
+        </member>
+        <member name="P:Nibbs.Nps.Integration.RequestModels.NpsIdVerificationReportRequest.AccountHolderInfo">
+            <summary>
+            SplmtryData KYC block for the account holder (AccountDesignation, IdType, IdValue,
+            AccountTier) — mandatory for a successful verification per the guide.
+            </summary>
+        </member>
+        <member name="P:Nibbs.Nps.Integration.RequestModels.NpsIdVerificationReportRequest.RiskRating">
+            <summary>Optional risk rating shared in the supplementary block.</summary>
+        </member>
+        <member name="T:Nibbs.Nps.Integration.RequestModels.NpsIdVerificationRequest">
+            <summary>Input for building an acmt.023 name enquiry.</summary>
+        </member>
+        <member name="P:Nibbs.Nps.Integration.RequestModels.NpsIdVerificationRequest.AccountAgentId">
+            <summary>NPS member id of the institution holding the account.</summary>
+        </member>
+        <member name="P:Nibbs.Nps.Integration.RequestModels.NpsIdVerificationRequest.AccountNumber">
+            <summary>The 10-digit account number to verify.</summary>
+        </member>
+        <member name="P:Nibbs.Nps.Integration.RequestModels.NpsIdVerificationRequest.PartyName">
+            <summary>Optional expected name of the account holder.</summary>
+        </member>
+        <member name="T:Nibbs.Nps.Integration.RequestModels.NpsPaymentStatusQuery">
+            <summary>Input for building a pacs.028 status enquiry.</summary>
+        </member>
+        <member name="P:Nibbs.Nps.Integration.RequestModels.NpsPaymentStatusQuery.CounterpartyId">
+            <summary>NPS member id of the counterparty institution on the original payment.</summary>
+        </member>
+        <member name="P:Nibbs.Nps.Integration.RequestModels.NpsPaymentStatusQuery.OriginalMessageId">
+            <summary>GrpHdr/MsgId of the original message.</summary>
+        </member>
+        <member name="P:Nibbs.Nps.Integration.RequestModels.NpsPaymentStatusQuery.OriginalCreationDateTime">
+            <summary>GrpHdr/CreDtTm of the original message.</summary>
+        </member>
+        <member name="P:Nibbs.Nps.Integration.RequestModels.NpsPaymentStatusQuery.OriginalTransactionId">
+            <summary>CdtTrfTxInf/TxId of the original message.</summary>
+        </member>
+        <member name="P:Nibbs.Nps.Integration.RequestModels.NpsPaymentStatusQuery.OriginalSettlementDate">
+            <summary>IntrBkSttlmDt of the original payment (ISO-8601 date).</summary>
+        </member>
+        <member name="T:Nibbs.Nps.Integration.RequestModels.NpsPaymentStatusReportRequest">
+            <summary>Input for building a pacs.002 answering an inbound pacs.008.</summary>
+        </member>
+        <member name="P:Nibbs.Nps.Integration.RequestModels.NpsPaymentStatusReportRequest.OriginalSenderId">
+            <summary>NPS member id of the institution that sent the original payment.</summary>
+        </member>
+        <member name="P:Nibbs.Nps.Integration.RequestModels.NpsPaymentStatusReportRequest.OriginalMessageId">
+            <summary>GrpHdr/MsgId of the original pacs.008.</summary>
+        </member>
+        <member name="P:Nibbs.Nps.Integration.RequestModels.NpsPaymentStatusReportRequest.OriginalCreationDateTime">
+            <summary>GrpHdr/CreDtTm of the original pacs.008.</summary>
+        </member>
+        <member name="P:Nibbs.Nps.Integration.RequestModels.NpsPaymentStatusReportRequest.OriginalSettlementDate">
+            <summary>IntrBkSttlmDt of the original payment (ISO-8601 date).</summary>
+        </member>
+        <member name="P:Nibbs.Nps.Integration.RequestModels.NpsPaymentStatusReportRequest.Status">
+            <summary>ACSC to approve, RJCT to decline. See <see cref="T:Nibbs.Nps.Integration.Constants.TransactionStatus"/>.</summary>
+        </member>
+        <member name="P:Nibbs.Nps.Integration.RequestModels.NpsPaymentStatusReportRequest.StatusId">
+            <summary>AUTH / NAUTH. See <see cref="T:Nibbs.Nps.Integration.Constants.StatusId"/>.</summary>
+        </member>
+        <member name="P:Nibbs.Nps.Integration.RequestModels.NpsPaymentStatusReportRequest.ReasonCode">
+            <summary>Reject reason code (registered in the NPS dictionaries), required for RJCT.</summary>
+        </member>
+        <member name="T:Nibbs.Nps.Integration.Serialization.NpsXmlSerializer">
+            <summary>
+            Serializes and deserializes NPS ISO 20022 documents in the exact wire format
+            mandated by the integration guide: UTF-8, standalone="no", no indentation,
+            the "ns2" prefix bound to the ISO namespace on the Document element,
+            and all child elements unqualified.
+            </summary>
+        </member>
+        <member name="M:Nibbs.Nps.Integration.Serialization.NpsXmlSerializer.Serialize``1(``0)">
+            <summary>Serializes a typed NPS document to its raw single-line XML string.</summary>
+        </member>
+        <member name="M:Nibbs.Nps.Integration.Serialization.NpsXmlSerializer.SerializeToXmlDocument``1(``0)">
+            <summary>Loads a typed NPS document into an <see cref="T:System.Xml.XmlDocument"/> DOM (for signing/encryption).</summary>
+        </member>
+        <member name="M:Nibbs.Nps.Integration.Serialization.NpsXmlSerializer.Deserialize``1(System.String)">
+            <summary>Deserializes raw XML into the given NPS document type.</summary>
+        </member>
+        <member name="M:Nibbs.Nps.Integration.Serialization.NpsXmlSerializer.DetectMessageType(System.String)">
+            <summary>Detects the NPS message type from a raw XML document's root namespace.</summary>
+        </member>
+        <member name="M:Nibbs.Nps.Integration.Serialization.NpsXmlSerializer.LoadXml(System.String)">
+            <summary>
+            Loads XML into a DOM preserving whitespace exactly, as required for
+            signature computation and validation.
+            </summary>
+        </member>
+        <member name="M:Nibbs.Nps.Integration.Serialization.NpsXmlSerializer.ToXmlString(System.Xml.XmlDocument)">
+            <summary>Renders a DOM back to its raw string form without adding any formatting.</summary>
+        </member>
+    </members>
+</doc>
