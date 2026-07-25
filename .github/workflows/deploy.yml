@@ -29,4 +29,4 @@ jobs:
         run: |
           ssh -i ~/.ssh/deploy_key -p ${{ secrets.SSH_PORT }} \
             ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} \
-            "sudo /usr/bin/systemctl restart benysta-webapi && sleep 3 && curl -sf -o /dev/null -w 'App HTTP %{http_code}\n' http://127.0.0.1:5000/"
+            "sudo /usr/bin/systemctl restart benysta-webapi && sleep 3 && code=$(curl -s -o /dev/null -w '%{http_code}' http://127.0.0.1:5000/scalar/v1); echo \"App HTTP $code\"; test \"$code\" != '000'"

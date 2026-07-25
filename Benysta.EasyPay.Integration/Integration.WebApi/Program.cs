@@ -31,8 +31,6 @@ builder.Services.AddOpenApi();
 
 var app = builder.Build();
 
-if (app.Environment.IsDevelopment())
-{
     app.MapOpenApi();
 
     // Scalar API reference UI at /scalar/v1 for documentation and endpoint testing.
@@ -42,7 +40,6 @@ if (app.Environment.IsDevelopment())
             .WithTitle("NIBBS National Payment Stack (NPS) Integration API")
             .WithDefaultHttpClient(ScalarTarget.CSharp, ScalarClient.HttpClient);
     });
-}
 
 app.MapControllers();
 
