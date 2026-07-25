@@ -37,7 +37,7 @@ var app = builder.Build();
     app.MapScalarApiReference(options =>
     {
         options
-            .WithTitle("NIBBS National Payment Stack (NPS) Integration API")
+            .WithTitle("BENYSTA MFB NIBSS National Payment Stack (NPS) Integration API")
             .WithDefaultHttpClient(ScalarTarget.CSharp, ScalarClient.HttpClient);
     });
 
