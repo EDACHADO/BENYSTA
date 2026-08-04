@@ -10,7 +10,6 @@ using Nibbs.Nps.Integration.Messages.Pain;
 using Nibbs.Nps.Integration.Serialization;
 
 namespace Nibbs.Nps.Integration.Client;
-
 public class NibssInstitutionGatewayClient : INibssInstitutionGatewayClient
 {
     private const string GrantType = "client_credentials";
