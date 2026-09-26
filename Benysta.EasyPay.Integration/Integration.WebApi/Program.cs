@@ -1,17 +1,16 @@
-using Integration.BusinessLogics;
+﻿using Integration.BusinessLogics;
+using Integration.DatabaseAccess;
 using Integration.WebApi.Services;
-using Microsoft.AspNetCore.Http.HttpResults;
 using Nibbs.Nps.Integration;
 using Nibbs.Nps.Integration.Configuration;
 using Scalar.AspNetCore;
-using System.Text.Json.Serialization;
 
 var builder = WebApplication.CreateBuilder(args);
 
-builder.Services.ConfigureHttpJsonOptions(options =>
-{
-    options.SerializerOptions.TypeInfoResolverChain.Insert(0, AppJsonSerializerContext.Default);
-});
+//builder.Services.ConfigureHttpJsonOptions(options =>
+//{
+//    options.SerializerOptions.TypeInfoResolverChain.Insert(0, AppJsonSerializerContext.Default);
+//});
 
 builder.Services.AddControllers();
 
@@ -19,8 +18,18 @@ builder.Services.AddControllers();
 builder.Services.Configure<NpsOptions>(builder.Configuration.GetSection(NpsOptions.SectionName));
 builder.Services.AddNpsIntegration();
 
+builder.Services.AddDALApplicationDependencies(builder.Configuration);
+
 // Business-logic layer: MediatR commands/queries the controllers dispatch to.
 builder.Services.AddIntegrationBusinessLogics();
+
+// Request/response logging for the pacs.008 / pacs.002 credit transfer flow, both
+// directions. Covers NPS certification Phases 1-3, including the inbound pacs.008 traffic
+// Phase 2 expects you to be able to observe.
+builder.Services.AddNpsSingleTransferLogging();
+
+// Request/response logging for the acmt.023 / acmt.024 name enquiry flow, both directions.
+builder.Services.AddNpsNameEnquiryLogging();
 
 // Identification Verification flow: answer inbound acmt.023 name enquiries with acmt.024.
 // PlaceholderAccountVerificationService rejects everything — swap in the core-banking lookup.
@@ -31,15 +40,20 @@ builder.Services.AddOpenApi();
 
 var app = builder.Build();
 
-    app.MapOpenApi();
+// Apply any pending EF Core migrations before the server starts accepting requests.
+await app.MigrateNibssNpsDatabaseAsync();
 
-    // Scalar API reference UI at /scalar/v1 for documentation and endpoint testing.
-    app.MapScalarApiReference(options =>
-    {
-        options
-            .WithTitle("BENYSTA MFB NIBSS National Payment Stack (NPS) Integration API")
-            .WithDefaultHttpClient(ScalarTarget.CSharp, ScalarClient.HttpClient);
-    });
+//if (app.Environment.IsDevelopment())
+//{
+app.MapOpenApi();
+
+// Scalar API reference UI at /scalar/v1 for documentation and endpoint testing.
+app.MapScalarApiReference(options =>
+{
+    options
+        .WithTitle("BENYSTA MFB NIBSS National Payment Stack (NPS) Integration API")
+        .WithDefaultHttpClient(ScalarTarget.CSharp, ScalarClient.HttpClient);
+});
 
 app.MapControllers();
 
@@ -64,10 +78,9 @@ app.MapControllers();
 
 app.Run();
 
-public record Todo(int Id, string? Title, DateOnly? DueBy = null, bool IsComplete = false);
+//public record Todo(int Id, string? Title, DateOnly? DueBy = null, bool IsComplete = false);
 
-[JsonSerializable(typeof(Todo[]))]
-internal partial class AppJsonSerializerContext : JsonSerializerContext
-{
-
-}
+//[JsonSerializable(typeof(Todo[]))]
+//internal partial class AppJsonSerializerContext : JsonSerializerContext
+//{
+//}

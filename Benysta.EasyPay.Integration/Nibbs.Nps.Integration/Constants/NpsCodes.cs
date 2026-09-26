@@ -20,6 +20,12 @@ public static class TransactionStatus
     /// <summary>Rejected.</summary>
     public const string Rejected = "RJCT";
 
+    /// <summary>
+    /// Partially accepted — some transactions in a batch succeeded and some did not.
+    /// Reported at group level (GrpSts) on a pain.002 for a multi-transaction pain.001.
+    /// </summary>
+    public const string PartiallyAccepted = "PART";
+
     /// <summary>Pending.</summary>
     public const string Pending = "PDNG";
 }

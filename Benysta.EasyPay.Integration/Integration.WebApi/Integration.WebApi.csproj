@@ -1,20 +1,41 @@
-<Project Sdk="Microsoft.NET.Sdk.Web">
+﻿<Project Sdk="Microsoft.NET.Sdk.Web">
 
   <PropertyGroup>
     <TargetFramework>net10.0</TargetFramework>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
     <InvariantGlobalization>true</InvariantGlobalization>
+    <UserSecretsId>04ba7061-2af7-46b2-a7c6-62bc18cc9e35</UserSecretsId>
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="10.0.9" />
-    <PackageReference Include="Microsoft.OpenApi" Version="2.0.2" />
+    <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="10.0.11" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="10.0.11">
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+      <PrivateAssets>all</PrivateAssets>
+    </PackageReference>
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Tools" Version="10.0.11">
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+      <PrivateAssets>all</PrivateAssets>
+    </PackageReference>
+    <PackageReference Include="Microsoft.OpenApi" Version="2.12.2" />
     <PackageReference Include="Scalar.AspNetCore" Version="2.16.11" />
+  </ItemGroup>
+
+  <!--
+    Key material lives in secrets\ (git-ignored) and is copied next to the binaries, so the
+    relative paths in appsettings.json resolve however the process is launched. The glob
+    matches nothing on a fresh clone, which is intended: the app then fails at startup with
+    "no file exists there" rather than running without the keys it needs.
+  -->
+  <ItemGroup>
+    <None Include="secrets\*.pem" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\Integration.BusinessLogics\Integration.BusinessLogics.csproj" />
+    <ProjectReference Include="..\Integration.DatabaseAccess\Integration.DatabaseAccess.csproj" />
+    <ProjectReference Include="..\Integration.Infrastructures\Integration.Infrastructures.csproj" />
     <ProjectReference Include="..\Nibbs.Nps.Integration\Nibbs.Nps.Integration.csproj" />
   </ItemGroup>
   

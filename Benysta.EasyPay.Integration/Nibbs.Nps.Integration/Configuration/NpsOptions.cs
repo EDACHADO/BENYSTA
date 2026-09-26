@@ -24,16 +24,26 @@ public class NpsOptions
     public string InstitutionName { get; set; } = string.Empty;
 
     /// <summary>
-    /// PEM (PKCS#8 or PKCS#1) content or file path of your institution's RSA-2048 private key.
-    /// The matching public key must have been shared with NIBSS during onboarding.
+    /// Path to the PEM file holding your institution's RSA-2048 private key (PKCS#8 or
+    /// PKCS#1). The matching public key must have been shared with NIBSS during onboarding.
     /// </summary>
-    public string PrivateKeyPem { get; set; } = string.Empty;
+    /// <remarks>
+    /// A path only — inline PEM content is rejected. Key material must never live in
+    /// configuration, where it ends up in source control, deployment manifests and logs.
+    /// Absolute, or relative to the application directory.
+    /// </remarks>
+    public string PrivateKeyPath { get; set; } = string.Empty;
 
     /// <summary>
-    /// PEM content or file path of the NIBSS/NPS RSA public key
-    /// (used to encrypt outbound payloads and validate inbound signatures).
+    /// Path to the PEM file holding the NIBSS/NPS RSA public key, used to encrypt outbound
+    /// payloads and validate inbound signatures. An X.509 certificate is also accepted.
     /// </summary>
-    public string NibssPublicKeyPem { get; set; } = string.Empty;
+    /// <remarks>
+    /// A path only, for the same reason as <see cref="PrivateKeyPath"/>. A public key is not
+    /// secret, but keeping both keys on the same footing means there is one way to supply
+    /// key material and no inline path for a private key to be pasted into by mistake.
+    /// </remarks>
+    public string NibssPublicKeyPath { get; set; } = string.Empty;
 
     /// <summary>HTTP timeout for calls to the switch.</summary>
     public TimeSpan Timeout { get; set; } = TimeSpan.FromSeconds(60);

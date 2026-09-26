@@ -30,8 +30,8 @@ builder.Services.AddNpsIntegration(options =>
     options.BaseUrl = "https://nps-test.nibss-plc.com.ng:8022/nps";
     options.SourceId = "999058";                       // your NPS member id
     options.InstitutionName = "Your Bank";
-    options.PrivateKeyPem = "/secrets/institution.key";  // PEM content or file path
-    options.NibssPublicKeyPem = "/secrets/nibss.pub";
+    options.PrivateKeyPath = "/secrets/institution.key";  // path to a PEM file
+    options.NibssPublicKeyPath = "/secrets/nibss.pub";    // path, or an X.509 certificate
 });
 
 // Optional: NIBSS Institution request messages via the API Gateway
@@ -42,6 +42,10 @@ builder.Services.AddNibssInstitutionGateway(options =>
     options.ClientSecret = "...";
 });
 ```
+
+Both key options are **paths only** — inline PEM content is rejected at startup, so key
+material never travels through configuration and cannot reach source control. Absolute paths
+are used as given; relative paths resolve against the application directory.
 
 ## Sending a payment (pacs.008)
 

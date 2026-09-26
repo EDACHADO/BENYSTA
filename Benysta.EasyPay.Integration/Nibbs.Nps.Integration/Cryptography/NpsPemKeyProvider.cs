@@ -8,14 +8,15 @@ using Nibbs.Nps.Integration.Exceptions;
 namespace Nibbs.Nps.Integration.Cryptography;
 
 /// <summary>
-/// <see cref="INpsKeyProvider"/> that loads the RSA keys from the PEM material configured
-/// in <see cref="NpsOptions"/>. <see cref="NpsOptions.PrivateKeyPem"/> and
-/// <see cref="NpsOptions.NibssPublicKeyPem"/> may each hold either the PEM text itself
-/// or a path to a PEM file. The private key may be PKCS#8 ("BEGIN PRIVATE KEY") or
-/// PKCS#1 ("BEGIN RSA PRIVATE KEY"); the NIBSS key may be an SPKI/PKCS#1 public key
-/// ("BEGIN PUBLIC KEY" / "BEGIN RSA PUBLIC KEY") or an X.509 certificate
-/// ("BEGIN CERTIFICATE"), from which the public key is extracted.
-/// Keys are loaded once and cached for the lifetime of the provider.
+/// <see cref="INpsKeyProvider"/> that loads the RSA keys from the PEM files that
+/// <see cref="NpsOptions.PrivateKeyPath"/> and <see cref="NpsOptions.NibssPublicKeyPath"/>
+/// point at. Both options are paths only — inline PEM content is rejected, so key material
+/// never travels through configuration.
+/// The private key may be PKCS#8 ("BEGIN PRIVATE KEY") or PKCS#1 ("BEGIN RSA PRIVATE KEY");
+/// the NIBSS key may be an SPKI/PKCS#1 public key ("BEGIN PUBLIC KEY" / "BEGIN RSA PUBLIC
+/// KEY") or an X.509 certificate ("BEGIN CERTIFICATE"), from which the public key is
+/// extracted. Keys are read once and cached for the lifetime of the provider, so rotating a
+/// key on disk needs a restart.
 /// </summary>
 public sealed class NpsPemKeyProvider : INpsKeyProvider, IDisposable
 {
@@ -28,11 +29,11 @@ public sealed class NpsPemKeyProvider : INpsKeyProvider, IDisposable
         var value = options.Value;
 
         _institutionPrivateKey = new Lazy<RSA>(
-            () => LoadPrivateKey(value.PrivateKeyPem),
+            () => LoadPrivateKey(value.PrivateKeyPath),
             LazyThreadSafetyMode.ExecutionAndPublication);
 
         _nibssPublicKey = new Lazy<RSA>(
-            () => LoadPublicKey(value.NibssPublicKeyPem),
+            () => LoadPublicKey(value.NibssPublicKeyPath),
             LazyThreadSafetyMode.ExecutionAndPublication);
     }
 
@@ -48,9 +49,9 @@ public sealed class NpsPemKeyProvider : INpsKeyProvider, IDisposable
             _nibssPublicKey.Value.Dispose();
     }
 
-    private static RSA LoadPrivateKey(string pemOrPath)
+    private static RSA LoadPrivateKey(string path)
     {
-        var pem = ResolvePem(pemOrPath, nameof(NpsOptions.PrivateKeyPem));
+        var pem = ReadPemFile(path, nameof(NpsOptions.PrivateKeyPath));
 
         try
         {
@@ -61,15 +62,15 @@ public sealed class NpsPemKeyProvider : INpsKeyProvider, IDisposable
         catch (Exception ex) when (ex is ArgumentException or CryptographicException)
         {
             throw new NpsSecurityException(
-                "Could not import the institution private key from " +
-                $"'{nameof(NpsOptions.PrivateKeyPem)}'. Expected an unencrypted PKCS#8 " +
+                "Could not import the institution private key from the file at " +
+                $"'{nameof(NpsOptions.PrivateKeyPath)}'. Expected an unencrypted PKCS#8 " +
                 "(BEGIN PRIVATE KEY) or PKCS#1 (BEGIN RSA PRIVATE KEY) RSA key.", ex);
         }
     }
 
-    private static RSA LoadPublicKey(string pemOrPath)
+    private static RSA LoadPublicKey(string path)
     {
-        var pem = ResolvePem(pemOrPath, nameof(NpsOptions.NibssPublicKeyPem));
+        var pem = ReadPemFile(path, nameof(NpsOptions.NibssPublicKeyPath));
 
         try
         {
@@ -88,29 +89,48 @@ public sealed class NpsPemKeyProvider : INpsKeyProvider, IDisposable
         catch (Exception ex) when (ex is ArgumentException or CryptographicException)
         {
             throw new NpsSecurityException(
-                "Could not import the NIBSS public key from " +
-                $"'{nameof(NpsOptions.NibssPublicKeyPem)}'. Expected a PEM public key " +
+                "Could not import the NIBSS public key from the file at " +
+                $"'{nameof(NpsOptions.NibssPublicKeyPath)}'. Expected a PEM public key " +
                 "(BEGIN PUBLIC KEY / BEGIN RSA PUBLIC KEY) or an X.509 certificate.", ex);
         }
     }
 
     /// <summary>
-    /// Returns the PEM text for a setting that may hold either inline PEM content
-    /// or the path of a PEM file.
+    /// Reads the PEM text from the file the setting points at.
     /// </summary>
-    private static string ResolvePem(string pemOrPath, string optionName)
+    /// <remarks>
+    /// Deliberately a path and nothing else. Inline PEM is rejected rather than loaded,
+    /// because a setting that accepts key material invites key material: it reaches
+    /// configuration files that are committed, deployment manifests, and anything that dumps
+    /// configuration to a log. Rejecting it turns that mistake into a startup error instead
+    /// of a silent leak.
+    /// <para>
+    /// The path is tried as given — covering absolute paths and paths relative to the
+    /// working directory — and then relative to the application directory, so a key deployed
+    /// alongside the binaries resolves however the process was launched.
+    /// </para>
+    /// </remarks>
+    private static string ReadPemFile(string path, string optionName)
     {
-        if (string.IsNullOrWhiteSpace(pemOrPath))
+        if (string.IsNullOrWhiteSpace(path))
             throw new NpsIntegrationException(
-                $"NpsOptions.{optionName} is not configured. Provide PEM content or a PEM file path.");
+                $"NpsOptions.{optionName} is not configured. Set it to the path of a PEM file.");
 
-        if (pemOrPath.Contains("-----BEGIN", StringComparison.Ordinal))
-            return pemOrPath;
-
-        if (!File.Exists(pemOrPath))
+        if (path.Contains("-----BEGIN", StringComparison.Ordinal))
             throw new NpsIntegrationException(
-                $"NpsOptions.{optionName} does not contain PEM content and no file exists at '{pemOrPath}'.");
+                $"NpsOptions.{optionName} contains inline PEM content, which is not accepted. " +
+                "Write the key to a PEM file and set this option to its path, so key material " +
+                "never lives in configuration.");
 
-        return File.ReadAllText(pemOrPath);
+        var resolved = File.Exists(path)
+            ? path
+            : Path.Combine(AppContext.BaseDirectory, path);
+
+        if (!File.Exists(resolved))
+            throw new NpsIntegrationException(
+                $"NpsOptions.{optionName} is set to '{path}', but no file exists there " +
+                $"(also tried '{resolved}').");
+
+        return File.ReadAllText(resolved);
     }
 }
