@@ -56,7 +56,6 @@ if (app.Environment.IsDevelopment())
             .WithTitle("BENYSTA MFB NIBSS National Payment Stack (NPS) Integration API")
             .WithDefaultHttpClient(ScalarTarget.CSharp, ScalarClient.HttpClient);
     });
-}
 
 app.MapControllers();
 
