@@ -1,18 +1,16 @@
 ﻿using Integration.BusinessLogics;
 using Integration.DatabaseAccess;
 using Integration.WebApi.Services;
-using Microsoft.AspNetCore.Http.HttpResults;
 using Nibbs.Nps.Integration;
 using Nibbs.Nps.Integration.Configuration;
 using Scalar.AspNetCore;
-using System.Text.Json.Serialization;
 
 var builder = WebApplication.CreateBuilder(args);
 
-builder.Services.ConfigureHttpJsonOptions(options =>
-{
-    options.SerializerOptions.TypeInfoResolverChain.Insert(0, AppJsonSerializerContext.Default);
-});
+//builder.Services.ConfigureHttpJsonOptions(options =>
+//{
+//    options.SerializerOptions.TypeInfoResolverChain.Insert(0, AppJsonSerializerContext.Default);
+//});
 
 builder.Services.AddControllers();
 
@@ -45,17 +43,17 @@ var app = builder.Build();
 // Apply any pending EF Core migrations before the server starts accepting requests.
 await app.MigrateNibssNpsDatabaseAsync();
 
-if (app.Environment.IsDevelopment())
-{
-    app.MapOpenApi();
+//if (app.Environment.IsDevelopment())
+//{
+app.MapOpenApi();
 
-    // Scalar API reference UI at /scalar/v1 for documentation and endpoint testing.
-    app.MapScalarApiReference(options =>
-    {
-        options
-            .WithTitle("BENYSTA MFB NIBSS National Payment Stack (NPS) Integration API")
-            .WithDefaultHttpClient(ScalarTarget.CSharp, ScalarClient.HttpClient);
-    });
+// Scalar API reference UI at /scalar/v1 for documentation and endpoint testing.
+app.MapScalarApiReference(options =>
+{
+    options
+        .WithTitle("BENYSTA MFB NIBSS National Payment Stack (NPS) Integration API")
+        .WithDefaultHttpClient(ScalarTarget.CSharp, ScalarClient.HttpClient);
+});
 
 app.MapControllers();
 
@@ -80,10 +78,9 @@ app.MapControllers();
 
 app.Run();
 
-public record Todo(int Id, string? Title, DateOnly? DueBy = null, bool IsComplete = false);
+//public record Todo(int Id, string? Title, DateOnly? DueBy = null, bool IsComplete = false);
 
-[JsonSerializable(typeof(Todo[]))]
-internal partial class AppJsonSerializerContext : JsonSerializerContext
-{
-
-}
+//[JsonSerializable(typeof(Todo[]))]
+//internal partial class AppJsonSerializerContext : JsonSerializerContext
+//{
+//}
