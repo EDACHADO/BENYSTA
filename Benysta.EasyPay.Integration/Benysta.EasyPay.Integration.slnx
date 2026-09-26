@@ -4,8 +4,9 @@
   </Folder>
   <Folder Name="/Services/">
     <Project Path="Integration.BusinessLogics/Integration.BusinessLogics.csproj" />
+    <Project Path="Integration.DatabaseAccess/Integration.DatabaseAccess.csproj" Id="fbefd809-4a15-4cf5-b6c7-38d67d537127" />
     <Project Path="Integration.Infrastructures/Integration.Infrastructures.csproj" />
-    <Project Path="Integration.Utilities/Integration.Utilities.csproj" />
+    <Project Path="Integration.Models/Integration.Models.csproj" Id="d01e2a21-cf3d-4ae5-8054-3445d54c9545" />
     <Project Path="Integration.ViewModels/Integration.ViewModels.csproj" />
   </Folder>
   <Project Path="Integration.WebApi/Integration.WebApi.csproj" />

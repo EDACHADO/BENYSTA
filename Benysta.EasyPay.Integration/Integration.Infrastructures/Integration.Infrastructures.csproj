@@ -6,4 +6,9 @@
     <Nullable>disable</Nullable>
   </PropertyGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\Integration.Models\Integration.Models.csproj" />
+    <ProjectReference Include="..\Integration.ViewModels\Integration.ViewModels.csproj" />
+  </ItemGroup>
+
 </Project>

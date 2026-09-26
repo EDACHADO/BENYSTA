@@ -1,5 +1,5 @@
 using Integration.BusinessLogics.Nps.Commands;
-using MediatR;
+using Mediator;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Integration.WebApi.Controllers;

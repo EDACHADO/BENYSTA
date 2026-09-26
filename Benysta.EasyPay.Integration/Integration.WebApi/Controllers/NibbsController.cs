@@ -2,7 +2,7 @@ using Integration.BusinessLogics.Concrete;
 using Integration.BusinessLogics.Nps.Commands;
 using Integration.BusinessLogics.Nps.Models;
 using Integration.BusinessLogics.Nps.Queries;
-using MediatR;
+using Mediator;
 using Microsoft.AspNetCore.Mvc;
 using Nibbs.Nps.Integration.RequestModels;
 

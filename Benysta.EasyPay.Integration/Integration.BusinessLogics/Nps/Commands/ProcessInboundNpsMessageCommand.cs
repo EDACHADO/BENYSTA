@@ -1,5 +1,5 @@
 using Integration.BusinessLogics.Nps.Models;
-using MediatR;
+using Mediator;
 using Microsoft.Extensions.Logging;
 using Nibbs.Nps.Integration.Exceptions;
 using Nibbs.Nps.Integration.Inbound;
@@ -22,7 +22,7 @@ public sealed class ProcessInboundNpsMessageCommandHandler(
     ILogger<ProcessInboundNpsMessageCommandHandler> logger)
     : IRequestHandler<ProcessInboundNpsMessageCommand, NpsWebhookProcessingResult>
 {
-    public async Task<NpsWebhookProcessingResult> Handle(
+    public async ValueTask<NpsWebhookProcessingResult> Handle(
         ProcessInboundNpsMessageCommand command,
         CancellationToken cancellationToken)
     {

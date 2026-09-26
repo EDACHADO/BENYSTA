@@ -1,7 +1,7 @@
 using Integration.BusinessLogics.Nps.Abstractions;
 using Integration.BusinessLogics.Nps.Commands;
 using Integration.BusinessLogics.Nps.Models;
-using MediatR;
+using Mediator;
 using Microsoft.Extensions.Logging;
 using Nibbs.Nps.Integration.Abstractions;
 using Nibbs.Nps.Integration.Inbound;

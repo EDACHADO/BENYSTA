@@ -1,5 +1,5 @@
 using Integration.BusinessLogics.Nps.Models;
-using MediatR;
+using Mediator;
 using Microsoft.Extensions.Logging;
 using Nibbs.Nps.Integration.Abstractions;
 using Nibbs.Nps.Integration.Exceptions;
@@ -14,7 +14,7 @@ public sealed class GetNpsParticipantsQueryHandler(
     ILogger<GetNpsParticipantsQueryHandler> logger)
     : IRequestHandler<GetNpsParticipantsQuery, NpsParticipantsResult>
 {
-    public async Task<NpsParticipantsResult> Handle(
+    public async ValueTask<NpsParticipantsResult> Handle(
         GetNpsParticipantsQuery query,
         CancellationToken cancellationToken)
     {

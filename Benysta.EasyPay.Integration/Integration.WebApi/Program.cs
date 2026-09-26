@@ -1,4 +1,5 @@
-using Integration.BusinessLogics;
+﻿using Integration.BusinessLogics;
+using Integration.DatabaseAccess;
 using Integration.WebApi.Services;
 using Microsoft.AspNetCore.Http.HttpResults;
 using Nibbs.Nps.Integration;
@@ -19,8 +20,18 @@ builder.Services.AddControllers();
 builder.Services.Configure<NpsOptions>(builder.Configuration.GetSection(NpsOptions.SectionName));
 builder.Services.AddNpsIntegration();
 
+builder.Services.AddDALApplicationDependencies(builder.Configuration);
+
 // Business-logic layer: MediatR commands/queries the controllers dispatch to.
 builder.Services.AddIntegrationBusinessLogics();
+
+// Request/response logging for the pacs.008 / pacs.002 credit transfer flow, both
+// directions. Covers NPS certification Phases 1-3, including the inbound pacs.008 traffic
+// Phase 2 expects you to be able to observe.
+builder.Services.AddNpsSingleTransferLogging();
+
+// Request/response logging for the acmt.023 / acmt.024 name enquiry flow, both directions.
+builder.Services.AddNpsNameEnquiryLogging();
 
 // Identification Verification flow: answer inbound acmt.023 name enquiries with acmt.024.
 // PlaceholderAccountVerificationService rejects everything — swap in the core-banking lookup.
@@ -30,6 +41,9 @@ builder.Services.AddNpsIdentificationVerificationFlow<PlaceholderAccountVerifica
 builder.Services.AddOpenApi();
 
 var app = builder.Build();
+
+// Apply any pending EF Core migrations before the server starts accepting requests.
+await app.MigrateNibssNpsDatabaseAsync();
 
 if (app.Environment.IsDevelopment())
 {
