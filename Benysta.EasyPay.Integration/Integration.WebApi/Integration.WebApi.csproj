@@ -25,8 +25,8 @@
   <!--
     Key material lives in secrets\ (git-ignored) and is copied next to the binaries, so the
     relative paths in appsettings.json resolve however the process is launched. The glob
-    matches nothing on a fresh clone, which is intended: the app then fails at startup with
-    "no file exists there" rather than running without the keys it needs.
+    matches nothing on a fresh clone. Keys load lazily, so a missing file surfaces as
+    "no file exists there" on the first signed/encrypted call, not at startup.
   -->
   <ItemGroup>
     <None Include="secrets\*.pem" CopyToOutputDirectory="PreserveNewest" />
