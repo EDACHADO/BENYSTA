@@ -1,6 +1,7 @@
 ﻿using Integration.BusinessLogics;
 using Integration.DatabaseAccess;
 using Integration.WebApi.Services;
+using Microsoft.Extensions.Options;
 using Nibbs.Nps.Integration;
 using Nibbs.Nps.Integration.Configuration;
 using Scalar.AspNetCore;
@@ -15,7 +16,16 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddControllers();
 
 // NIBSS National Payment Stack integration (configured via the "Nps" section).
-builder.Services.Configure<NpsOptions>(builder.Configuration.GetSection(NpsOptions.SectionName));
+// The keys load lazily on the first signed/encrypted call, so without these checks a
+// deployment with missing settings starts cleanly and only fails once traffic arrives.
+// Only presence is checked here; the key files themselves are still resolved on first use.
+builder.Services.AddOptions<NpsOptions>()
+    .Bind(builder.Configuration.GetSection(NpsOptions.SectionName))
+    .Validate(o => !string.IsNullOrWhiteSpace(o.BaseUrl), "Nps:BaseUrl is not configured.")
+    .Validate(o => !string.IsNullOrWhiteSpace(o.SourceId), "Nps:SourceId is not configured.")
+    .Validate(o => !string.IsNullOrWhiteSpace(o.PrivateKeyPath), "Nps:PrivateKeyPath is not configured.")
+    .Validate(o => !string.IsNullOrWhiteSpace(o.NibssPublicKeyPath), "Nps:NibssPublicKeyPath is not configured.")
+    .ValidateOnStart();
 builder.Services.AddNpsIntegration();
 
 builder.Services.AddDALApplicationDependencies(builder.Configuration);
@@ -39,6 +49,10 @@ builder.Services.AddNpsIdentificationVerificationFlow<PlaceholderAccountVerifica
 builder.Services.AddOpenApi();
 
 var app = builder.Build();
+
+// ValidateOnStart only fires inside app.Run(); resolve the options here so a missing Nps
+// setting is reported before the migration below touches the database.
+_ = app.Services.GetRequiredService<IOptions<NpsOptions>>().Value;
 
 // Apply any pending EF Core migrations before the server starts accepting requests.
 await app.MigrateNibssNpsDatabaseAsync();
