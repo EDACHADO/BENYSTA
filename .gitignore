@@ -4,6 +4,9 @@
 **/bin/
 **/obj/
 **/packages/
+## dotnet publish output. CI publishes to the runner temp dir; a committed copy here
+## was being deployed in place of the fresh build output.
+/publish/
 *.user
 *.suo
 *.cache
