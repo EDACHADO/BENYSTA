@@ -14,7 +14,7 @@ jobs:
         with:
           dotnet-version: '10.0.x'
       - name: Publish
-        run: dotnet publish Benysta.EasyPay.Integration/Integration.WebApi/Integration.WebApi.csproj --configuration Release -o ./publish
+        run: dotnet publish Benysta.EasyPay.Integration/Integration.WebApi/Integration.WebApi.csproj --configuration Release -o ${{ runner.temp }}/publish
       - name: Setup SSH key
         run: |
           mkdir -p ~/.ssh
@@ -24,7 +24,7 @@ jobs:
       - name: Rsync to server
         run: |
           rsync -az --delete -e "ssh -i ~/.ssh/deploy_key -p ${{ secrets.SSH_PORT }}" \
-            ./publish/ ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}:/home/${{ secrets.SSH_USER }}/app/
+            ${{ runner.temp }}/publish/ ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}:/home/${{ secrets.SSH_USER }}/app/
       - name: Restart service
         run: |
           ssh -i ~/.ssh/deploy_key -p ${{ secrets.SSH_PORT }} \
