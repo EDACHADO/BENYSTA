@@ -18,10 +18,5 @@ Thumbs.db
 
 ## Secrets — never commit
 ## NPS private key material and any local config override.
-secrets/
-**/secrets/
-*.pem
-*.pem.txt
-*.key
 appsettings.Local.json
 **/appsettings.Local.json
